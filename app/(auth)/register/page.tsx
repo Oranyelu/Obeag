@@ -37,7 +37,7 @@ export default function RegisterPage() {
   return (
     <div>
       <div>
-        <h2 className='mt-6 text-center text-3xl font-extrabold text-gray-900'>
+        <h2 className='mt-6 text-center text-3xl font-extrabold text-primary'>
           Register new account
         </h2>
       </div>
@@ -52,7 +52,7 @@ export default function RegisterPage() {
               name='name'
               type='text'
               required
-              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm'
               placeholder='Full Name'
               value={formData.name}
               onChange={handleChange}
@@ -68,7 +68,7 @@ export default function RegisterPage() {
               type='email'
               autoComplete='email'
               required
-              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm'
               placeholder='Email address'
               value={formData.email}
               onChange={handleChange}
@@ -84,7 +84,7 @@ export default function RegisterPage() {
               type='password'
               autoComplete='new-password'
               required
-              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm'
               placeholder='Password'
               value={formData.password}
               onChange={handleChange}
@@ -99,7 +99,7 @@ export default function RegisterPage() {
               name='code'
               type='text'
               required
-              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+              className='appearance-none rounded-none relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm'
               placeholder='Registration Code'
               value={formData.code}
               onChange={handleChange}
@@ -112,14 +112,14 @@ export default function RegisterPage() {
         <div>
           <button
             type='submit'
-            className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+            className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition'
           >
             Register
           </button>
         </div>
 
         <div className='text-sm text-center'>
-          <Link href='/login' className='font-medium text-blue-600 hover:text-blue-500'>
+          <Link href='/login' className='font-medium text-primary hover:text-accent transition'>
             Already have an account? Sign in
           </Link>
         </div>

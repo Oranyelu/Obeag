@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
+import { ThemeToggle } from '@/app/components/ThemeToggle';
 
 export default function AdminLayout({
   children,
@@ -10,30 +11,39 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-      <aside className="w-full md:w-64 bg-white shadow-md">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800">OBEAG Admin</h1>
+    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground transition-colors duration-300">
+      <aside className="w-full md:w-64 bg-card shadow-md border-r border-border">
+        <div className="p-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-primary">OBEAG Admin</h1>
+          <div className="md:hidden">
+            <ThemeToggle />
+          </div>
         </div>
-        <nav className="mt-6">
-          <Link href="/admin/dues" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-500 hover:text-white">
+        <nav className="mt-6 px-4">
+          <Link href="/admin/dues" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Manage Dues
           </Link>
-          <Link href="/admin/users" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-500 hover:text-white">
+          <Link href="/admin/users" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             User Management
           </Link>
-          <Link href="/admin/broadcast" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-500 hover:text-white">
+          <Link href="/admin/broadcast" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Broadcasts
           </Link>
-          <Link href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-200 text-gray-600 mt-4">
+          <Link href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-muted text-muted-foreground mt-4">
             Back to Home
           </Link>
           <button
             onClick={() => signOut()}
-            className="block w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-red-500 hover:text-white text-red-600 mt-4"
+            className="block w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-red-600 hover:text-white text-red-500 mt-4"
           >
             Logout
           </button>
+          <div className="mt-8 hidden md:block">
+             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <ThemeToggle />
+                <span>Toggle Theme</span>
+             </div>
+          </div>
         </nav>
       </aside>
       <main className="flex-1 p-6">

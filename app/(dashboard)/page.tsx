@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { CircularProgressBar } from '@/app/components/CircularProgressBar';
 
 interface Due {
   id: string;
@@ -10,111 +11,180 @@ interface Due {
   amount: number;
   type: string;
   dueDate: string;
+  isPaid: boolean;
+}
+
+interface DashboardData {
+  dues: Due[];
+  stats: {
+    totalDuesAmount: number;
+    totalPaidAmount: number;
+    amountOwed: number;
+    percentagePaid: number;
+  };
 }
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [dues, setDues] = useState<Due[]>([]);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPaying, setIsPaying] = useState(false);
 
   useEffect(() => {
-    fetchDues();
+    fetchDashboardData();
   }, []);
 
-  const fetchDues = async () => {
-    const res = await fetch('/api/dues');
-    if (res.ok) {
-      const data = await res.json();
-      setDues(data);
+  const fetchDashboardData = async () => {
+    try {
+      const res = await fetch('/api/dashboard');
+      if (res.ok) {
+        const dashboardData = await res.json();
+        setData(dashboardData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handlePay = async (dueId?: string) => {
+    if (!confirm(dueId ? 'Pay this due?' : 'Pay off all dues?')) return;
+    
+    setIsPaying(true);
+    try {
+      const body = dueId 
+        ? { dueId } 
+        : { dueIds: data?.dues.filter(d => !d.isPaid).map(d => d.id) };
+
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        alert('Payment successful!');
+        fetchDashboardData();
+      } else {
+        alert('Payment failed.');
+      }
+    } catch (error) {
+      console.error('Payment error', error);
+      alert('An error occurred.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  if (isLoading) return <div className="p-8 text-center">Loading dashboard...</div>;
+  if (!data) return <div className="p-8 text-center text-red-500">Failed to load data.</div>;
+
+  const unpaidDuesCount = data.dues.filter(d => !d.isPaid).length;
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className='text-2xl font-bold text-gray-900'>Dashboard</h1>
-        {session?.user?.role === 'ADMIN' && (
-          <Link href="/admin" className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
-            Go to Admin Dashboard
-          </Link>
-        )}
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Welcome, {session?.user?.name || 'Member'}</h1>
+          <p className="text-muted-foreground">Here is your dues summary.</p>
+        </div>
+        <div className="flex gap-3">
+          {unpaidDuesCount > 0 && (
+            <button 
+              onClick={() => handlePay()}
+              disabled={isPaying}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg shadow hover:bg-green-700 transition disabled:opacity-50 font-semibold"
+            >
+              {isPaying ? 'Processing...' : 'Pay Off All Dues'}
+            </button>
+          )}
+          {session?.user?.role === 'ADMIN' && (
+            <Link href="/admin" className="bg-primary text-primary-foreground px-6 py-2 rounded-lg shadow hover:opacity-90 transition font-semibold">
+              Admin Dashboard
+            </Link>
+          )}
+        </div>
       </div>
       
-      <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
-        {/* Summary Cards */}
-        <div className='bg-white overflow-hidden shadow rounded-lg'>
-          <div className='p-5'>
-            <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-blue-500 rounded-md p-3'>
-                <svg className='h-6 w-6 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-                </svg>
-              </div>
-              <div className='ml-5 w-0 flex-1'>
-                <dl>
-                  <dt className='text-sm font-medium text-gray-500 truncate'>Total Unpaid Dues</dt>
-                  <dd>
-                    <div className='text-lg font-medium text-gray-900'>$0.00</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
+      {/* Status Bar Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1">
+          <CircularProgressBar 
+            percentage={data.stats.percentagePaid} 
+            totalPaid={data.stats.totalPaidAmount}
+            amountOwed={data.stats.amountOwed}
+          />
         </div>
-
-        <div className='bg-white overflow-hidden shadow rounded-lg'>
-          <div className='p-5'>
-            <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-green-500 rounded-md p-3'>
-                <svg className='h-6 w-6 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
-                </svg>
-              </div>
-              <div className='ml-5 w-0 flex-1'>
-                <dl>
-                  <dt className='text-sm font-medium text-gray-500 truncate'>Paid This Month</dt>
-                  <dd>
-                    <div className='text-lg font-medium text-gray-900'>$0.00</div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
+        
+        {/* Quick Stats / Info (Optional placeholder for future charts) */}
+        <div className="md:col-span-2 bg-card rounded-xl shadow-lg border border-border p-6 flex flex-col justify-center">
+          <h3 className="text-lg font-semibold mb-4 text-foreground">Payment Status</h3>
+          <p className="text-muted-foreground mb-4">
+            You have paid <span className="font-bold text-foreground">{Math.round(data.stats.percentagePaid)}%</span> of your total dues.
+            {data.stats.amountOwed > 0 
+              ? ` You still owe ${data.stats.amountOwed.toLocaleString()}. Please clear your dues to avoid penalties.`
+              : " Great job! You are fully paid up."}
+          </p>
+          <div className="w-full bg-secondary rounded-full h-4 overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ${data.stats.percentagePaid >= 100 ? 'bg-green-500' : data.stats.percentagePaid >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+              style={{ width: `${data.stats.percentagePaid}%` }}
+            ></div>
           </div>
         </div>
       </div>
 
-      <h2 className='text-xl font-bold text-gray-900 mt-8 mb-4'>Upcoming Dues</h2>
-      <div className='bg-white shadow overflow-hidden sm:rounded-md'>
-        <ul className='divide-y divide-gray-200'>
-          {dues.map((due) => (
-            <li key={due.id}>
-              <div className='px-4 py-4 sm:px-6'>
-                <div className='flex items-center justify-between'>
-                  <p className='text-sm font-medium text-blue-600 truncate'>{due.title}</p>
-                  <div className='ml-2 flex-shrink-0 flex'>
-                    <p className='px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800'>
-                      ${due.amount}
-                    </p>
+      {/* Dues List Section */}
+      <div>
+        <h2 className="text-2xl font-bold text-foreground mb-6">Your Dues</h2>
+        <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
+          <ul className="divide-y divide-border">
+            {data.dues.map((due) => (
+              <li key={due.id} className="hover:bg-muted/50 transition-colors">
+                <div className="px-6 py-5 sm:px-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-lg font-semibold text-primary truncate">{due.title}</p>
+                        <p className="ml-4 text-lg font-bold text-foreground">
+                          {due.amount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <span className="bg-secondary px-2 py-1 rounded text-xs font-medium uppercase tracking-wide mr-3">
+                            {due.type}
+                          </span>
+                          <span>Due: {new Date(due.dueDate).toLocaleDateString()}</span>
+                        </div>
+                        <div>
+                          {due.isPaid ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                              Paid
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handlePay(due.id)}
+                              disabled={isPaying}
+                              className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition"
+                            >
+                              Pay Due
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className='mt-2 sm:flex sm:justify-between'>
-                  <div className='sm:flex'>
-                    <p className='flex items-center text-sm text-gray-500'>
-                      {due.type}
-                    </p>
-                  </div>
-                  <div className='mt-2 flex items-center text-sm text-gray-500 sm:mt-0'>
-                    <p>
-                      Due on <time dateTime={due.dueDate}>{new Date(due.dueDate).toLocaleDateString()}</time>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-          {dues.length === 0 && (
-            <li className='px-4 py-4 sm:px-6 text-center text-gray-500'>No upcoming dues found.</li>
-          )}
-        </ul>
+              </li>
+            ))}
+            {data.dues.length === 0 && (
+              <li className="px-6 py-8 text-center text-muted-foreground">No dues found.</li>
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );

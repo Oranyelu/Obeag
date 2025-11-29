@@ -46,32 +46,32 @@ export default function BroadcastPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Send Broadcast</h1>
+      <h1 className="text-3xl font-bold text-primary mb-8">Send Broadcast</h1>
       
-      <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="bg-card p-6 rounded-lg shadow-md border border-border">
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
+          <div className="mb-4 p-4 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100 rounded-md">
             {successMessage}
           </div>
         )}
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <label className="block text-sm font-medium text-muted-foreground">Title</label>
             <input
               {...register('title')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+              className="mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2"
               placeholder="e.g., Meeting Reminder"
             />
             {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">Message</label>
+            <label className="block text-sm font-medium text-muted-foreground">Message</label>
             <textarea
               {...register('message')}
               rows={5}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+              className="mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2"
               placeholder="Type your message here..."
             />
             {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>}
@@ -80,7 +80,7 @@ export default function BroadcastPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 transition duration-200"
+            className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 transition duration-200"
           >
             {isLoading ? 'Sending...' : 'Send Broadcast'}
           </button>

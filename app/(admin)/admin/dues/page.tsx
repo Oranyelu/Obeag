@@ -70,86 +70,86 @@ export default function ManageDuesPage() {
 
   return (
     <div className='max-w-4xl mx-auto'>
-      <h1 className='text-3xl font-bold mb-8 text-gray-800'>Manage Dues</h1>
+      <h1 className='text-3xl font-bold mb-8 text-primary'>Manage Dues</h1>
 
-      <div className='bg-white p-6 rounded-lg shadow-md mb-8'>
-        <h2 className='text-xl font-semibold mb-4 text-gray-700'>Create New Due</h2>
+      <div className='bg-card p-6 rounded-lg shadow-md mb-8 border border-border'>
+        <h2 className='text-xl font-semibold mb-4 text-foreground'>Create New Due</h2>
         <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Title</label>
+              <label className='block text-sm font-medium text-muted-foreground'>Title</label>
               <input
                 {...register('title')}
-                className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2'
+                className='mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2'
               />
               {errors.title && <p className='text-red-500 text-sm'>{errors.title.message}</p>}
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Amount</label>
+              <label className='block text-sm font-medium text-muted-foreground'>Amount ()</label>
               <input
                 type='number'
                 step='0.01'
                 {...register('amount', { valueAsNumber: true })}
-                className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2'
+                className='mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2'
               />
               {errors.amount && <p className='text-red-500 text-sm'>{errors.amount.message}</p>}
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Type</label>
+              <label className='block text-sm font-medium text-muted-foreground'>Type</label>
               <select
                 {...register('type')}
-                className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2'
+                className='mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2'
               >
                 <option value='MONTHLY'>Monthly</option>
                 <option value='OCCASIONAL'>Occasional</option>
               </select>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700'>Due Date</label>
+              <label className='block text-sm font-medium text-muted-foreground'>Due Date</label>
               <input
                 type='datetime-local'
                 {...register('dueDate')}
-                className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2'
+                className='mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2'
               />
               {errors.dueDate && <p className='text-red-500 text-sm'>{errors.dueDate.message}</p>}
             </div>
           </div>
           <div>
-            <label className='block text-sm font-medium text-gray-700'>Description</label>
+            <label className='block text-sm font-medium text-muted-foreground'>Description</label>
             <textarea
               {...register('description')}
-              className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2'
+              className='mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary border p-2'
             />
           </div>
           <button
             type='submit'
             disabled={isLoading}
-            className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50'
+            className='w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:opacity-90 disabled:opacity-50 transition'
           >
             {isLoading ? 'Creating...' : 'Create Due'}
           </button>
         </form>
       </div>
 
-      <div className='bg-white p-6 rounded-lg shadow-md'>
-        <h2 className='text-xl font-semibold mb-4 text-gray-700'>Existing Dues</h2>
+      <div className='bg-card p-6 rounded-lg shadow-md border border-border'>
+        <h2 className='text-xl font-semibold mb-4 text-foreground'>Existing Dues</h2>
         <div className='overflow-x-auto'>
-          <table className='min-w-full divide-y divide-gray-200'>
-            <thead className='bg-gray-50'>
+          <table className='min-w-full divide-y divide-border'>
+            <thead className='bg-muted/50'>
               <tr>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Title</th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Amount</th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Type</th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Due Date</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>Title</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>Amount</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>Type</th>
+                <th className='px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider'>Due Date</th>
               </tr>
             </thead>
-            <tbody className='bg-white divide-y divide-gray-200'>
+            <tbody className='bg-card divide-y divide-border'>
               {dues.map((due) => (
                 <tr key={due.id}>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>{due.title}</td>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>${due.amount}</td>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{due.type}</td>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>{new Date(due.dueDate).toLocaleDateString()}</td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground'>{due.title}</td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm text-muted-foreground'>{due.amount.toLocaleString()}</td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm text-muted-foreground'>{due.type}</td>
+                  <td className='px-6 py-4 whitespace-nowrap text-sm text-muted-foreground'>{new Date(due.dueDate).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
