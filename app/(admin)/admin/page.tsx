@@ -16,9 +16,19 @@ export default function AdminDashboardPage() {
           <p className="text-muted-foreground">View users and generate registration codes.</p>
         </Link>
 
+        <Link href="/admin/finances" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-yellow-500 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Financial Records</h2>
+          <p className="text-muted-foreground">Track income, expenses, and net balance.</p>
+        </Link>
+
         <Link href="/admin/broadcast" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-accent border border-border">
           <h2 className="text-xl font-semibold text-foreground mb-2">Broadcasts</h2>
           <p className="text-muted-foreground">Send notifications to all members.</p>
+        </Link>
+
+        <Link href="/admin/reminders" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-red-500 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Reminders</h2>
+          <p className="text-muted-foreground">Send email reminders for overdue dues.</p>
         </Link>
       </div>
     </div>

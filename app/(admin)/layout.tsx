@@ -19,26 +19,39 @@ export default function AdminLayout({
             <ThemeToggle />
           </div>
         </div>
-        <nav className="mt-6 px-4">
+        <nav className="mt-6 px-4 space-y-2">
+          <Link href="/admin" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground font-medium">
+            Dashboard
+          </Link>
           <Link href="/admin/dues" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Manage Dues
           </Link>
           <Link href="/admin/users" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             User Management
           </Link>
+          <Link href="/admin/finances" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
+            Finances
+          </Link>
           <Link href="/admin/broadcast" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Broadcasts
           </Link>
-          <Link href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-muted text-muted-foreground mt-4">
-            Back to Home
+          <Link href="/admin/reminders" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
+            Reminders
           </Link>
-          <button
-            onClick={() => signOut()}
-            className="block w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-red-600 hover:text-white text-red-500 mt-4"
-          >
-            Logout
-          </button>
-          <div className="mt-8 hidden md:block">
+          
+          <div className="pt-4 mt-4 border-t border-border">
+            <Link href="/" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-muted text-muted-foreground">
+              Back to Home
+            </Link>
+            <button
+              onClick={() => signOut()}
+              className="block w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-red-600 hover:text-white text-red-500 mt-2"
+            >
+              Logout
+            </button>
+          </div>
+
+          <div className="mt-8 hidden md:block px-4">
              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <ThemeToggle />
                 <span>Toggle Theme</span>

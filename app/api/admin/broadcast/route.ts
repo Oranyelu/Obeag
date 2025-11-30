@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import { sendEmail } from '@/app/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -12,18 +13,10 @@ export async function POST(request: Request) {
 
     // Get all users
     const users = await prisma.user.findMany({
-      select: { id: true },
+      select: { id: true, email: true, name: true },
     });
 
-    // Create notifications for all users
-    // Note: createMany is not supported in SQLite for relations in the way we might want, 
-    // but we can use a transaction or loop. 
-    // Actually, createMany IS supported for simple models in SQLite but let's be safe with a transaction loop if needed.
-    // Wait, createMany IS supported in Prisma with SQLite.
-    
-    // However, we need to link to userId.
-    // Let's use a transaction to be safe and clear.
-    
+    // 1. Create DB notifications
     await prisma.$transaction(
       users.map((user) =>
         prisma.notification.create({
@@ -35,6 +28,27 @@ export async function POST(request: Request) {
         })
       )
     );
+
+    // 2. Send Emails
+    console.log(`Sending broadcast emails to ${users.length} users...`);
+    const emailPromises = users.map(user => 
+        sendEmail({
+            to: user.email,
+            subject: `OBEAG Broadcast: ${title}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h1 style="color: #8B4513;">${title}</h1>
+                    <p>Dear ${user.name || 'Member'},</p>
+                    <p>${message.replace(/\n/g, '<br>')}</p>
+                    <br/>
+                    <hr style="border: 1px solid #eee;" />
+                    <p style="font-size: 12px; color: #888;">Best regards,<br/>OBEAG Admin</p>
+                </div>
+            `
+        })
+    );
+
+    await Promise.allSettled(emailPromises);
 
     return NextResponse.json({ message: 'Broadcast sent successfully' }, { status: 201 });
   } catch (error) {

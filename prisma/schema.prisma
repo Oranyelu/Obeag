@@ -8,64 +8,63 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   name          String?
   email         String    @unique
   password      String
-  role          String    @default("USER") // "USER" | "ADMIN"
+  role          String    @default("USER") // "USER" or "ADMIN"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
   payments      Payment[]
   notifications Notification[]
-  verificationCode VerificationCode?
 }
 
 model VerificationCode {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   code      String   @unique
-  name      String?  // Name of the person this code is for
+  name      String?  // Optional name associated with the code
   isUsed    Boolean  @default(false)
   createdAt DateTime @default(now())
-  
-  usedByUserId String? @unique
-  usedByUser   User?   @relation(fields: [usedByUserId], references: [id])
 }
 
 model Due {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   title       String
   description String?
   amount      Float
-  type        String    // "MONTHLY" | "OCCASIONAL"
   dueDate     DateTime
+  type        String    // "MONTHLY", "CONDOLENCE", "PROJECT", etc.
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
   payments    Payment[]
 }
 
 model Payment {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   amount    Float
-  status    String   @default("PENDING") // "PENDING" | "COMPLETED" | "FAILED"
-  paidAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  status    String   // "PENDING", "COMPLETED", "FAILED"
+  paidAt    DateTime @default(now())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   dueId     String
+  user      User     @relation(fields: [userId], references: [id])
   due       Due      @relation(fields: [dueId], references: [id])
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   title     String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Float
+  date        DateTime @default(now())
+  description String?
+  createdAt   DateTime @default(now())
 }

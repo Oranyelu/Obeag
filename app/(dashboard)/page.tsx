@@ -9,13 +9,25 @@ interface Due {
   id: string;
   title: string;
   amount: number;
+  originalAmount: number;
   type: string;
   dueDate: string;
   isPaid: boolean;
+  isOverdue: boolean;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
 }
 
 interface DashboardData {
   dues: Due[];
+  recentNotifications: Notification[];
+  unreadNotificationCount: number;
   stats: {
     totalDuesAmount: number;
     totalPaidAmount: number;
@@ -108,6 +120,36 @@ export default function DashboardPage() {
         </div>
       </div>
       
+      {/* Recent Notifications Hero Section */}
+      {data.recentNotifications.length > 0 && (
+        <div className="bg-gradient-to-r from-primary/10 to-transparent p-6 rounded-xl border border-primary/20">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-primary flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              Recent Updates
+            </h2>
+            <Link href="/notifications" className="text-sm font-medium text-primary hover:underline">
+              View All
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {data.recentNotifications.map((notif) => (
+              <div key={notif.id} className="bg-card p-4 rounded-lg shadow-sm border border-border flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-foreground">{notif.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-1">{notif.message}</p>
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
+                  {new Date(notif.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Status Bar Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
@@ -118,7 +160,7 @@ export default function DashboardPage() {
           />
         </div>
         
-        {/* Quick Stats / Info (Optional placeholder for future charts) */}
+        {/* Quick Stats / Info */}
         <div className="md:col-span-2 bg-card rounded-xl shadow-lg border border-border p-6 flex flex-col justify-center">
           <h3 className="text-lg font-semibold mb-4 text-foreground">Payment Status</h3>
           <p className="text-muted-foreground mb-4">
@@ -139,7 +181,7 @@ export default function DashboardPage() {
       {/* Dues List Section */}
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-6">Your Dues</h2>
-        <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
+        <div className="bg-card shadow-lg rounded-xl border border-border overflow-visible">
           <ul className="divide-y divide-border">
             {data.dues.map((due) => (
               <li key={due.id} className="hover:bg-muted/50 transition-colors">
@@ -147,10 +189,29 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-lg font-semibold text-primary truncate">{due.title}</p>
-                        <p className="ml-4 text-lg font-bold text-foreground">
-                          {due.amount.toLocaleString()}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-lg font-semibold text-primary truncate">
+                            {due.title}
+                          </p>
+                          {due.isOverdue && !due.isPaid && (
+                             <div className="group relative inline-block">
+                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-red-600 text-xs font-bold cursor-help border border-red-200">?</span>
+                                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-48 p-2 bg-popover text-popover-foreground text-xs rounded shadow-lg border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                  Penalty Applied: Amount doubled due to late payment.
+                                </div>
+                             </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                           <p className={`ml-4 text-lg font-bold ${due.isOverdue && !due.isPaid ? 'text-red-600' : 'text-foreground'}`}>
+                             {due.amount.toLocaleString()}
+                           </p>
+                           {due.isOverdue && !due.isPaid && (
+                             <p className="text-xs text-muted-foreground line-through">
+                               {due.originalAmount.toLocaleString()}
+                             </p>
+                           )}
+                        </div>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center text-sm text-muted-foreground">
