@@ -17,12 +17,9 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    // 2. Fetch user's payments
+    // 2. Fetch all user's payments
     const userPayments = await prisma.payment.findMany({
-      where: { 
-        userId,
-        status: 'COMPLETED'
-      },
+      where: { userId },
     });
 
     // 3. Fetch recent notifications
@@ -39,40 +36,55 @@ export async function GET() {
       },
     });
 
-    // 4. Calculate stats and penalties
-    const paymentMap = new Map(userPayments.map(p => [p.dueId, p.amount]));
-    const now = new Date();
-    
+    // 3b. Fetch upcoming meetings
+    const upcomingMeetings = await prisma.meeting.findMany({
+      where: {
+        date: { gte: new Date() }
+      },
+      orderBy: { date: 'asc' },
+      take: 3
+    });
+
+    // 4. Map dues status based on payments
     const duesWithStatus = allDues.map(due => {
-      const paidAmount = paymentMap.get(due.id);
-      const isPaid = paidAmount !== undefined;
-      const isOverdue = new Date(due.dueDate) < now && !isPaid;
+      // Find latest payment for this due
+      const paymentsForDue = userPayments.filter(p => p.dueId === due.id);
       
-      // Determine the effective amount for this due
-      let effectiveAmount = due.amount;
-      
-      if (isPaid) {
-        // If paid, the effective amount is what was actually paid (handles cases where they paid penalty)
-        effectiveAmount = paidAmount;
-      } else if (isOverdue) {
-        // If overdue and not paid, double the amount
-        effectiveAmount = due.amount * 2;
+      let isPaid = false;
+      let isPending = false;
+      let isFailed = false;
+
+      if (paymentsForDue.length > 0) {
+        // Sort to get the most recent payment state
+        paymentsForDue.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+        const latestPayment = paymentsForDue[0];
+
+        isPaid = latestPayment.status === 'COMPLETED';
+        isPending = latestPayment.status === 'PENDING';
+        isFailed = latestPayment.status === 'FAILED';
       }
 
       return {
-        ...due,
-        isPaid,
-        isOverdue,
+        id: due.id,
+        title: due.title,
+        description: due.description,
+        amount: due.amount,
         originalAmount: due.amount,
-        amount: effectiveAmount
+        type: due.type,
+        dueDate: due.dueDate.toISOString(),
+        isPaid,
+        isPending,
+        isFailed,
+        isOverdue: new Date(due.dueDate) < new Date() && !isPaid
       };
     });
 
-    const totalDuesAmount = duesWithStatus.reduce((sum, due) => sum + due.amount, 0);
-    const totalPaidAmount = userPayments.reduce((sum, p) => sum + p.amount, 0);
+    // 5. Calculate Stats
+    const totalDuesAmount = allDues.reduce((sum, due) => sum + due.amount, 0);
+    const completedPayments = userPayments.filter(p => p.status === 'COMPLETED');
+    const totalPaidAmount = completedPayments.reduce((sum, p) => sum + p.amount, 0);
     const amountOwed = totalDuesAmount - totalPaidAmount;
     
-    // Avoid division by zero
     const percentagePaid = totalDuesAmount > 0 
       ? (totalPaidAmount / totalDuesAmount) * 100 
       : 100;
@@ -81,6 +93,7 @@ export async function GET() {
       dues: duesWithStatus,
       recentNotifications,
       unreadNotificationCount,
+      upcomingMeetings,
       stats: {
         totalDuesAmount,
         totalPaidAmount,

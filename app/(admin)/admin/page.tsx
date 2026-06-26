@@ -11,9 +11,19 @@ export default function AdminDashboardPage() {
           <p className="text-muted-foreground">Create, edit, and view association dues.</p>
         </Link>
 
+        <Link href="/admin/meetings" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-indigo-500 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Manage Meetings</h2>
+          <p className="text-muted-foreground">Schedule new meetings and view meeting history.</p>
+        </Link>
+
         <Link href="/admin/users" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-green-500 border border-border">
           <h2 className="text-xl font-semibold text-foreground mb-2">User Management</h2>
           <p className="text-muted-foreground">View users and generate registration codes.</p>
+        </Link>
+
+        <Link href="/admin/payments" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-blue-500 border border-border">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Confirm Payments</h2>
+          <p className="text-muted-foreground">Verify and approve manual dues payments.</p>
         </Link>
 
         <Link href="/admin/finances" className="block p-6 bg-card rounded-lg shadow-md hover:shadow-lg transition duration-200 border-l-4 border-yellow-500 border border-border">

@@ -3,28 +3,40 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String    @unique
-  password      String
-  role          String    @default("USER") // "USER" or "ADMIN"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  payments      Payment[]
-  notifications Notification[]
+  id             String           @id @default(uuid())
+  name           String
+  email          String           @unique
+  password       String?          // Optional for Google login compatibility
+  role           String           @default("USER") // "USER" or "ADMIN"
+  status         String           @default("PENDING_APPROVAL") // "PENDING_APPROVAL", "APPROVED", "REJECTED"
+  dob            DateTime
+  phone          String
+  community      String           // Sub-community from Okwojo Ngwo
+  profilePicture String           // URL to profile picture
+  birthCert      String           // URL to birth certificate/ baptism card
+  baptismCard    String?          // Optional alternative URL
+  googleId       String?          @unique // Google authentication ID
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  payments       Payment[]
+  notifications  Notification[]
+  verificationCode VerificationCode?
 }
 
 model VerificationCode {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  name      String?  // Optional name associated with the code
-  isUsed    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  code         String   @unique // 6-digit verification code
+  name         String   // Pre-registered name of the member
+  isUsed       Boolean  @default(false)
+  usedByUserId String?  @unique
+  usedByUser   User?    @relation(fields: [usedByUserId], references: [id])
+  createdAt    DateTime @default(now())
 }
 
 model Due {
@@ -33,21 +45,22 @@ model Due {
   description String?
   amount      Float
   dueDate     DateTime
-  type        String    // "MONTHLY", "CONDOLENCE", "PROJECT", etc.
+  type        String    // "MONTHLY", "OCCASIONAL", etc.
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   payments    Payment[]
 }
 
 model Payment {
-  id        String   @id @default(uuid())
-  amount    Float
-  status    String   // "PENDING", "COMPLETED", "FAILED"
-  paidAt    DateTime @default(now())
-  userId    String
-  dueId     String
-  user      User     @relation(fields: [userId], references: [id])
-  due       Due      @relation(fields: [dueId], references: [id])
+  id          String    @id @default(uuid())
+  amount      Float
+  status      String    // "PENDING", "COMPLETED", "FAILED"
+  paidAt      DateTime? // Date when admin confirmed the payment
+  submittedAt DateTime  @default(now()) // Date when user submitted pay request
+  userId      String
+  dueId       String
+  user        User      @relation(fields: [userId], references: [id])
+  due         Due       @relation(fields: [dueId], references: [id])
 }
 
 model Notification {
@@ -67,4 +80,14 @@ model Expense {
   date        DateTime @default(now())
   description String?
   createdAt   DateTime @default(now())
+}
+
+model Meeting {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  date        DateTime
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

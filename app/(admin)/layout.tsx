@@ -26,8 +26,14 @@ export default function AdminLayout({
           <Link href="/admin/dues" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Manage Dues
           </Link>
+          <Link href="/admin/meetings" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
+            Manage Meetings
+          </Link>
           <Link href="/admin/users" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             User Management
+          </Link>
+          <Link href="/admin/payments" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
+            Confirm Payments
           </Link>
           <Link href="/admin/finances" className="block py-2.5 px-4 rounded transition duration-200 hover:bg-primary hover:text-primary-foreground">
             Finances

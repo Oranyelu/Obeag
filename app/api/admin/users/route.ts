@@ -9,6 +9,13 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        status: true,
+        dob: true,
+        phone: true,
+        community: true,
+        profilePicture: true,
+        birthCert: true,
+        baptismCard: true,
         createdAt: true,
       },
       orderBy: {

@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# member ledger & registration codes
+*.csv
+member_registration_codes.txt
+seed-csv.js
+enable-rls.js
