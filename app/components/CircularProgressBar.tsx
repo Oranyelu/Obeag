@@ -4,13 +4,11 @@ import React from 'react';
 
 interface CircularProgressBarProps {
   percentage: number;
-  totalPaid: number;
   amountOwed: number;
 }
 
 export const CircularProgressBar: React.FC<CircularProgressBarProps> = ({
   percentage,
-  totalPaid,
   amountOwed,
 }) => {
   const radius = 80;
@@ -24,7 +22,7 @@ export const CircularProgressBar: React.FC<CircularProgressBarProps> = ({
   else if (percentage < 50) gradientId = 'redGradient';
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-card rounded-2xl shadow-lg border border-border/80">
+    <div className="flex flex-col items-center justify-center p-6 bg-card rounded-2xl shadow-lg border border-border/80 h-full">
       <div className="relative flex items-center justify-center">
         <svg
           height={radius * 2}
@@ -73,12 +71,8 @@ export const CircularProgressBar: React.FC<CircularProgressBarProps> = ({
       </div>
       
       <div className="mt-6 text-center space-y-2 w-full">
-        <div className="flex justify-between w-full max-w-[200px] mx-auto text-sm">
-          <span className="text-muted-foreground font-medium">Total Paid:</span>
-          <span className="font-bold text-green-600">₦{totalPaid.toLocaleString()}</span>
-        </div>
-        <div className="flex justify-between w-full max-w-[200px] mx-auto text-sm border-t border-border/50 pt-2">
-          <span className="text-muted-foreground font-medium">Amount Owed:</span>
+        <div className="flex justify-between w-full max-w-[200px] mx-auto text-sm border-t border-border/50 pt-4">
+          <span className="text-muted-foreground font-medium">Outstanding Dues:</span>
           <span className="font-bold text-red-500">₦{amountOwed.toLocaleString()}</span>
         </div>
       </div>

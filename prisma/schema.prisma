@@ -19,8 +19,7 @@ model User {
   phone          String
   community      String           // Sub-community from Okwojo Ngwo
   profilePicture String           // URL to profile picture
-  birthCert      String           // URL to birth certificate/ baptism card
-  baptismCard    String?          // Optional alternative URL
+  birthCert      String           // URL to birth certificate
   googleId       String?          @unique // Google authentication ID
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt

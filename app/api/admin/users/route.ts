@@ -15,7 +15,6 @@ export async function GET() {
         community: true,
         profilePicture: true,
         birthCert: true,
-        baptismCard: true,
         createdAt: true,
       },
       orderBy: {

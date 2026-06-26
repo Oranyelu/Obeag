@@ -1,47 +1,41 @@
-# Walkthrough of Restructuring & Seeding Changes
+# Walkthrough: Dashboard Facelift, Storage Migration & Field Cleanup
 
-All phases of the Obeag restructuring are completed. The database is hosted on Supabase, Row-Level Security (RLS) is enabled, member data is seeded, and the Admin user has been configured.
+All enhancements from the approved plan have been successfully implemented, type-checked, and verified.
 
 ---
 
 ## 🛠️ Changes Implemented
 
-### 1. Database & Security (`prisma/schema.prisma`)
-*   **PostgreSQL Datasource**: Switched Prisma to connect to Supabase with connection pooling (`DATABASE_URL` via port 6543) and direct connection bypass for migrations/seeding (`DIRECT_URL` via port 5432).
-*   **Row-Level Security (RLS)**: Secured the database from anonymous client-side tampering by enabling RLS on all 7 tables: `User`, `VerificationCode`, `Due`, `Payment`, `Notification`, `Expense`, and `Meeting`.
+### 1. Database Schema & Field Cleanup
+*   **Schema Update**: Removed the `baptismCard` optional string field from the `User` model in [schema.prisma](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/prisma/schema.prisma).
+*   **Database Push**: Executed `npx prisma db push` to synchronize remote Supabase database tables with the updated schema structure.
+*   **API & View Cleanups**: 
+    *   Removed `baptismCard` query parameters from registration routes in [register/route.ts](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/api/register/route.ts).
+    *   Removed `baptismCard` from selector definitions in [users/route.ts](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/api/admin/users/route.ts).
+    *   Removed baptism card visual references and download links in [admin/users/page.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/%28admin%29/admin/users/page.tsx).
 
-### 2. CSV Seeding & Pre-Registration (`seed-csv.js`)
-*   **Batch Seeding**: Developed a high-performance database seeder that imports 65 members and 1,344 historical payment records from your CSV ledger in just **3 database queries** (using custom UUIDs and batch inserts to avoid remote transaction timeouts).
-*   **Placeholder Accounts**: Created a pre-registered `User` profile for every member in the ledger. When members register using their code, their placeholder email will be swapped for their real email, their password will be hashed, and all their historical payments will be waiting for them.
-*   **Admin Code Sheets**: Generated two code sheets in the root directory for the administrator to distribute to members:
-    *   `member_registration_codes.txt` (Text alignment sheet)
-    *   `member_registration_codes.csv` (Excel-compatible sheet)
+### 2. Supabase Storage Migration (1MB Size Limits)
+*   **Server-Side Upload**: Upgraded [api/upload/route.ts](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/api/upload/route.ts) to upload profile pictures and birth certificates directly to your public Supabase Storage bucket (`obeag-uploads`) using direct REST API operations. Files are now persistently stored and safe from Vercel dynamic server restarts.
+*   **Strict Size Restrictions**: Configured a strict **1MB file size ceiling (1,048,576 bytes)** verified on:
+    *   **Client-Side**: Immediate form input validation in [register/page.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/%28auth%29/register/page.tsx). Input files are rejected instantly if they exceed 1MB, raising a helpful banner error.
+    *   **Server-Side**: Double-validated inside `/api/upload` endpoint, returning status code `400` if breached.
 
-### 3. Admin Account Setup (`Chime George Chiemerie`)
-*   **Special Seeding Case**: Set up `Chime George Chiemerie` as the primary administrator with the requested credentials:
-    *   **Email**: `georgechime91@gmail.com`
-    *   **Password**: `Uiui9898`
-    *   **Role**: `ADMIN`
-    *   **Status**: `APPROVED` (bypasses the pending-approval gate)
+### 3. User Dashboard Premium Redesign
+*   **Loading Skeletons**: Swapped plain loader text in [page.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/%28dashboard%29/page.tsx) with custom pulsing layout skeletons (`animate-pulse`) representing header cards, grids, progress bars, and dues blocks.
+*   **Welcome Avatar Bubble**: Retrieved and rendered the member's uploaded profile picture inside a premium border avatar in the dashboard welcome header.
+*   **Recent Dues with "Load More"**: Sorted dues by due date descending. By default, only the **5 most recent dues** are rendered. If more exist, a glassmorphic **Load More** button enables the user to expand or collapse the remaining dues list.
+*   **Payment Stats Privacy**:
+    *   Removed exact Naira total paid stats (`totalPaidAmount`) to protect member privacy.
+    *   Updated [CircularProgressBar.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/components/CircularProgressBar.tsx) to only show percentage paid and amount owed.
+    *   Removed the secondary linear progress bar, leaving the singular circular gauge as the central visual indicator.
 
-### 4. Auth & UI Facelift
-*   **Layout Adjustments**: Wrapped the login and registration forms in beautiful double-bordered glassmorphic container cards and upgraded all action buttons to sienna-copper transitions (`btn-gradient`).
-*   **Flexible Layout Grid**: Modified [layout.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/%28auth%29/layout.tsx) to increase container width on desktop, giving the registration form comfortable breathing room.
-*   **Profile Updating API**: Modified [register/route.ts](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/api/register/route.ts) to automatically update a member's pre-created profile (and preserve their historical dues) when registering.
+### 4. Admin Dashboard UI Polishing
+*   **Polished Cards**: Upgraded the grid in [admin/page.tsx](file:///c:/Users/USER/Desktop/Active%20Projects/Obeag/app/%28admin%29/admin/page.tsx) to use premium bordered cards aligned with the sienna/copper design language.
+*   **Custom Vector Icons**: Designed unique inline SVGs for all admin tools (User Management, Confirm Payments, Manage Dues, Meetings, Finances, Broadcasts, and Reminders) with interactive slide-in hover transitions.
 
 ---
 
 ## 🧪 Verification Results
 
-1.  **TypeScript Check**: Executed `npx tsc --noEmit` which completed successfully with **0 errors**.
-2.  **Production Build**: Ran `npm run build` which successfully compiled all static/dynamic routes and built the optimized production bundle with zero warnings.
-3.  **Seeder Execution**: Seeded successfully and created the codes sheets.
-
----
-
-## 🔑 Login and Admin Access
-
-You can log in to the admin dashboard right away using the credentials:
-*   **Email**: `georgechime91@gmail.com`
-*   **Password**: `Uiui9898`
-*   **Dashboard URL**: `http://localhost:3000/` (then click "Admin Dashboard" in the top header)
+1.  **TypeScript Compilation**: Executed `npx tsc --noEmit` which completed successfully with **0 errors**.
+2.  **Production Build**: Ran `npm run build` which compiled all static/dynamic routes and built the optimized production bundle with zero warnings or errors.

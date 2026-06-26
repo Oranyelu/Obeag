@@ -36,7 +36,6 @@ export default function RegisterPage() {
   // Files
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [birthCertFile, setBirthCertFile] = useState<File | null>(null);
-  const [baptismCardFile, setBaptismCardFile] = useState<File | null>(null);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -108,18 +107,19 @@ export default function RegisterPage() {
       return;
     }
 
+    if (profilePicFile.size > 1024 * 1024 || birthCertFile.size > 1024 * 1024) {
+      setError('Each uploaded file must be under 1MB.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // 1. Upload files first
       let profilePictureUrl = '';
       let birthCertUrl = '';
-      let baptismCardUrl = '';
 
       profilePictureUrl = await uploadFile(profilePicFile);
       birthCertUrl = await uploadFile(birthCertFile);
-
-      if (baptismCardFile) {
-        baptismCardUrl = await uploadFile(baptismCardFile);
-      }
 
       // 2. Submit registration
       const registerPayload = {
@@ -127,7 +127,6 @@ export default function RegisterPage() {
         code,
         profilePicture: profilePictureUrl,
         birthCert: birthCertUrl,
-        baptismCard: baptismCardUrl || undefined,
       };
 
       const res = await fetch('/api/register', {
@@ -329,41 +328,49 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                  Profile Picture *
+                  Profile Picture * (Max 1MB)
                 </label>
                 <input
                   type="file"
                   required
                   accept="image/*"
-                  onChange={(e) => setProfilePicFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    if (file && file.size > 1024 * 1024) {
+                      setError('Profile picture exceeds 1MB limit.');
+                      setProfilePicFile(null);
+                      e.target.value = '';
+                    } else {
+                      setError('');
+                      setProfilePicFile(file);
+                    }
+                  }}
                   className="block w-full text-xs text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                  Birth Certificate *
+                  Birth Certificate * (Max 1MB)
                 </label>
                 <input
                   type="file"
                   required
                   accept="image/*,application/pdf"
-                  onChange={(e) => setBirthCertFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    if (file && file.size > 1024 * 1024) {
+                      setError('Birth certificate exceeds 1MB limit.');
+                      setBirthCertFile(null);
+                      e.target.value = '';
+                    } else {
+                      setError('');
+                      setBirthCertFile(file);
+                    }
+                  }}
                   className="block w-full text-xs text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                Baptismal Card (Optional alternative)
-              </label>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => setBaptismCardFile(e.target.files?.[0] || null)}
-                className="block w-full text-xs text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-              />
             </div>
           </div>
 

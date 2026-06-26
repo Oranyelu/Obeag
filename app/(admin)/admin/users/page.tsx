@@ -14,7 +14,6 @@ interface User {
   community: string;
   profilePicture: string;
   birthCert: string;
-  baptismCard?: string;
   createdAt: string;
 }
 
@@ -276,16 +275,6 @@ export default function UserManagementPage() {
                         >
                           📄 Birth Certificate
                         </a>
-                        {u.baptismCard && (
-                          <a
-                            href={u.baptismCard}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block text-accent hover:underline font-semibold"
-                          >
-                            ✝️ Baptismal Card
-                          </a>
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <div className="flex justify-center gap-2">

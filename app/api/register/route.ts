@@ -13,8 +13,7 @@ export async function POST(request: Request) {
       phone, 
       community, 
       profilePicture, 
-      birthCert, 
-      baptismCard 
+      birthCert 
     } = body;
 
     // 1. Basic field presence checks
@@ -80,7 +79,6 @@ export async function POST(request: Request) {
             community,
             profilePicture,
             birthCert,
-            baptismCard: baptismCard || null,
           },
         });
       } else {
@@ -97,7 +95,6 @@ export async function POST(request: Request) {
             community,
             profilePicture,
             birthCert,
-            baptismCard: baptismCard || null,
           },
         });
       }

@@ -60,6 +60,7 @@ export default function DashboardPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState('');
+  const [showAllDues, setShowAllDues] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -166,16 +167,86 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="h-28 bg-card rounded-xl border border-border shadow-sm flex items-center p-6 gap-4">
+          <div className="w-16 h-16 rounded-full bg-muted"></div>
+          <div className="space-y-3">
+            <div className="h-6 w-48 bg-muted rounded"></div>
+            <div className="h-4 w-72 bg-muted rounded"></div>
+          </div>
+        </div>
+
+        {/* Grid of Broadcasts & Meetings Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-48 bg-card rounded-xl border border-border p-6 space-y-4">
+            <div className="h-5 w-36 bg-muted rounded"></div>
+            <div className="space-y-3">
+              <div className="h-10 bg-muted/60 rounded"></div>
+              <div className="h-10 bg-muted/60 rounded"></div>
+            </div>
+          </div>
+          <div className="h-48 bg-card rounded-xl border border-border p-6 space-y-4">
+            <div className="h-5 w-36 bg-muted rounded"></div>
+            <div className="space-y-3">
+              <div className="h-10 bg-muted/60 rounded"></div>
+              <div className="h-10 bg-muted/60 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Bar Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 h-56 bg-card rounded-xl border border-border p-6 flex flex-col items-center justify-center space-y-4">
+            <div className="w-28 h-28 rounded-full border-8 border-muted"></div>
+            <div className="h-4 w-20 bg-muted rounded"></div>
+          </div>
+          <div className="md:col-span-2 h-56 bg-card rounded-xl border border-border p-6 flex flex-col justify-center space-y-4">
+            <div className="h-6 w-32 bg-muted rounded"></div>
+            <div className="h-4 w-full bg-muted rounded"></div>
+            <div className="h-4 w-2/3 bg-muted rounded"></div>
+          </div>
+        </div>
+
+        {/* Dues List Skeleton */}
+        <div className="space-y-4">
+          <div className="h-6 w-32 bg-muted rounded"></div>
+          <div className="bg-card rounded-xl border border-border p-6 space-y-4">
+            <div className="h-12 bg-muted/60 rounded"></div>
+            <div className="h-12 bg-muted/60 rounded"></div>
+            <div className="h-12 bg-muted/60 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!data) return <div className="p-8 text-center text-red-500">Failed to load data.</div>;
+
+  // Sort and display dues
+  const sortedDues = [...data.dues].sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+  const displayedDues = showAllDues ? sortedDues : sortedDues.slice(0, 5);
 
   return (
     <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Welcome, {session?.user?.name || 'Member'}</h1>
-          <p className="text-muted-foreground">Manage your dues payments and receive group updates.</p>
+        <div className="flex items-center gap-4">
+          {profile?.profilePicture ? (
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary shadow-sm bg-muted flex-shrink-0">
+              <img src={profile.profilePicture} alt="Profile" className="object-cover w-full h-full" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-primary text-xl flex-shrink-0">
+              {(session?.user?.name || 'M')[0]}
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-primary">Welcome, {session?.user?.name || 'Member'}</h1>
+            <p className="text-muted-foreground text-sm">Manage your dues payments and receive group updates.</p>
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {profile && !profile.googleId && (
@@ -257,26 +328,18 @@ export default function DashboardPage() {
         <div className="md:col-span-1">
           <CircularProgressBar 
             percentage={data.stats.percentagePaid} 
-            totalPaid={data.stats.totalPaidAmount}
             amountOwed={data.stats.amountOwed}
           />
         </div>
         
         {/* Quick Stats / Info */}
         <div className="md:col-span-2 bg-card rounded-xl shadow-lg border border-border p-6 flex flex-col justify-center">
-          <h3 className="text-lg font-semibold mb-4 text-foreground">Payment Status</h3>
-          <p className="text-muted-foreground mb-4">
-            You have paid <span className="font-bold text-foreground">{Math.round(data.stats.percentagePaid)}%</span> of your total dues.
+          <h3 className="text-lg font-semibold mb-2 text-foreground">Dues Overview</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
             {data.stats.amountOwed > 0 
-              ? ` You have outstanding dues of ${data.stats.amountOwed.toLocaleString()}. Please make a bank transfer and submit confirmation requests below.`
-              : " Great job! You are fully paid up."}
+              ? `You currently have outstanding dues of ₦${data.stats.amountOwed.toLocaleString()}. Please view the list below to settle your accounts via bank transfer, then submit a payment confirmation request.`
+              : "Congratulations! You do not have any outstanding dues at this time."}
           </p>
-          <div className="w-full bg-secondary rounded-full h-4 overflow-hidden">
-            <div 
-              className={`h-full transition-all duration-500 ${data.stats.percentagePaid >= 100 ? 'bg-green-500' : 'bg-amber-500'}`}
-              style={{ width: `${data.stats.percentagePaid}%` }}
-            ></div>
-          </div>
         </div>
       </div>
 
@@ -285,7 +348,7 @@ export default function DashboardPage() {
         <h2 className="text-2xl font-bold text-foreground mb-6">Your Dues</h2>
         <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
           <ul className="divide-y divide-border">
-            {data.dues.map((due) => (
+            {displayedDues.map((due) => (
               <li key={due.id} className="hover:bg-muted/30 transition-colors">
                 <div className="px-6 py-5 sm:px-8">
                   <div className="flex items-center justify-between">
@@ -295,7 +358,7 @@ export default function DashboardPage() {
                           {due.title}
                         </p>
                         <p className="ml-4 text-lg font-bold text-foreground">
-                          {due.amount.toLocaleString()}
+                          ₦{due.amount.toLocaleString()}
                         </p>
                       </div>
                       
@@ -336,6 +399,16 @@ export default function DashboardPage() {
             )}
           </ul>
         </div>
+        {data.dues.length > 5 && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => setShowAllDues(!showAllDues)}
+              className="px-6 py-2 rounded-xl bg-card/60 backdrop-blur-md border border-border text-sm font-semibold hover:bg-card transition duration-200"
+            >
+              {showAllDues ? 'Show Less' : `Load More (${data.dues.length - 5} hidden)`}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
