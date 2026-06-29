@@ -119,6 +119,39 @@ export default function DashboardPage() {
     }
   };
 
+  const handlePayAll = async () => {
+    if (!data) return;
+    const outstandingDues = data.dues.filter(due => !due.isPaid && !due.isPending);
+    if (outstandingDues.length === 0) return;
+    
+    const totalAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
+    
+    if (!confirm(`Submit a payment confirmation request for all outstanding dues? Total amount to pay is ₦${totalAmount.toLocaleString()}. Make sure you have transferred the amount to the association bank account.`)) return;
+    
+    setIsPaying(true);
+    try {
+      const dueIds = outstandingDues.map(due => due.id);
+      const res = await fetch('/api/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dueIds }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert('All payment requests submitted! Waiting for administrator to confirm.');
+        fetchDashboardData();
+      } else {
+        alert(result.error || 'Payment requests failed.');
+      }
+    } catch (error) {
+      console.error('Payment error', error);
+      alert('An error occurred.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
   // Google Sign-In script initialization for linking accounts on dashboard
   useEffect(() => {
     if (!profile || profile.googleId) return;
@@ -345,7 +378,24 @@ export default function DashboardPage() {
 
       {/* Dues List Section */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-6">Your Dues</h2>
+        {(() => {
+          const outstandingDues = data?.dues.filter(due => !due.isPaid && !due.isPending) || [];
+          const totalOutstandingAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
+          return (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-foreground">Your Dues</h2>
+              {outstandingDues.length > 0 && (
+                <button
+                  onClick={handlePayAll}
+                  disabled={isPaying}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-primary-foreground btn-gradient focus:outline-none transition disabled:opacity-50 cursor-pointer shadow-sm self-start sm:self-auto"
+                >
+                  Pay All Outstanding (₦{totalOutstandingAmount.toLocaleString()})
+                </button>
+              )}
+            </div>
+          );
+        })()}
         <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
           <ul className="divide-y divide-border">
             {displayedDues.map((due) => (
