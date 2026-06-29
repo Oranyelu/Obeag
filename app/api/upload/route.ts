@@ -35,6 +35,7 @@ export async function POST(request: Request) {
       {
         method: 'POST',
         headers: {
+          'apikey': supabaseKey,
           'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': file.type || 'application/octet-stream',
         },
