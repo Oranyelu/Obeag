@@ -71,61 +71,18 @@ export const Navbar: React.FC<NavbarProps> = ({ unreadCount = 0 }) => {
                         </button>
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <div className="-mr-2 flex items-center sm:hidden">
+                    {/* Mobile Right Side */}
+                    <div className="flex items-center sm:hidden space-x-2">
                         <ThemeToggle />
                         <button
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary ml-2"
-                        >
-                            <span className="sr-only">Open main menu</span>
-                            {isMobileMenuOpen ? (
-                                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            ) : (
-                                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Menu */}
-            {isMobileMenuOpen && (
-                <div className="sm:hidden bg-card border-b border-border">
-                    <div className="pt-2 pb-3 space-y-1">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition-colors duration-200 ${isActive(link.href)
-                                        ? 'bg-primary/10 border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:bg-muted hover:border-border hover:text-foreground'
-                                    }`}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span>{link.name}</span>
-                                    {link.name === 'Notifications' && unreadCount > 0 && (
-                                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full mr-4">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </div>
-                            </Link>
-                        ))}
-                        <button
                             onClick={() => signOut()}
-                            className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+                            className="text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/10 px-2.5 py-1.5 rounded-lg active:bg-red-500/20 transition cursor-pointer"
                         >
                             Logout
                         </button>
                     </div>
                 </div>
-            )}
+            </div>
         </nav>
     );
 };

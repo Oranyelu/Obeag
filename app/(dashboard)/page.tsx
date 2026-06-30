@@ -71,10 +71,66 @@ export default function DashboardPage() {
     totalAmount: 0,
   });
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+
   useEffect(() => {
     fetchDashboardData();
     fetchProfileData();
   }, []);
+
+  useEffect(() => {
+    if (session?.user?.id && !isLoading) {
+      const accepted = localStorage.getItem(`obeag_terms_accepted_${session.user.id}`);
+      if (accepted !== 'true') {
+        setShowOnboarding(true);
+      } else {
+        const tutCompleted = localStorage.getItem(`obeag_tutorial_completed_${session.user.id}`);
+        if (tutCompleted !== 'true') {
+          setShowTutorial(true);
+        }
+      }
+    }
+  }, [session, isLoading]);
+
+  const tutorialSteps = [
+    {
+      title: 'Dashboard Welcome',
+      content: 'This card displays your profile status and custom avatar. You can also link your Google account for faster logins, or jump into the Admin Dashboard if you are an administrator.',
+      highlight: 'header-section',
+    },
+    {
+      title: 'Dues Payment Progress',
+      content: 'This circular progress indicator visually displays your overall payment status percentage and your current total outstanding balance.',
+      highlight: 'dues-overview',
+    },
+    {
+      title: 'Dues Management',
+      content: 'Here you can view all outstanding and paid dues. You can pay a single due by clicking "Pay Due" or pay all outstanding dues at once by clicking the "Pay All Outstanding" button.',
+      highlight: 'dues-list-section',
+    },
+    {
+      title: 'Broadcasts & Meetings',
+      content: 'Stay connected with Okwojo Ngwo! View general broadcasts, news, announcements, and upcoming meetings right in these dedicated panels.',
+      highlight: 'info-grid',
+    },
+    {
+      title: 'Mobile Bottom Tabs',
+      content: 'On mobile screens, use the bottom navigation tab bar to quickly switch between Home (Dashboard), History, Alerts, and the Constitution.',
+      highlight: 'bottom-nav-cue',
+    },
+  ];
+
+  const getHighlightClass = (elementId: string) => {
+    if (!showTutorial) return '';
+    const currentStep = tutorialSteps[tutorialStep];
+    if (currentStep?.highlight === elementId) {
+      return 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background transition-all duration-300 relative z-30 scale-[1.01] shadow-2xl';
+    }
+    return '';
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -263,7 +319,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm">
+      <div 
+        id="header-section" 
+        className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border border-border shadow-sm transition-all duration-300 ${getHighlightClass('header-section')}`}
+      >
         <div className="flex items-center gap-4">
           {profile?.profilePicture ? (
             <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary shadow-sm bg-muted flex-shrink-0">
@@ -296,7 +355,10 @@ export default function DashboardPage() {
       </div>
       
       {/* Grid of Broadcasts & Meetings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div 
+        id="info-grid" 
+        className={`grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all duration-300 ${getHighlightClass('info-grid')}`}
+      >
         {/* Recent Notifications Section */}
         {data.recentNotifications.length > 0 && (
           <div className="bg-gradient-to-r from-primary/10 to-transparent p-6 rounded-xl border border-primary/20 flex flex-col justify-between">
@@ -355,7 +417,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Status Bar Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div 
+        id="dues-overview" 
+        className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-300 ${getHighlightClass('dues-overview')}`}
+      >
         <div className="md:col-span-1">
           <CircularProgressBar 
             percentage={data.stats.percentagePaid} 
@@ -375,7 +440,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Dues List Section */}
-      <div>
+      <div 
+        id="dues-list-section" 
+        className={`transition-all duration-300 ${getHighlightClass('dues-list-section')}`}
+      >
         {(() => {
           const outstandingDues = data?.dues.filter(due => !due.isPaid && !due.isPending) || [];
           const totalOutstandingAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
@@ -531,6 +599,167 @@ export default function DashboardPage() {
               >
                 {isPaying ? 'Submitting...' : 'I have sent the money'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Onboarding Welcome / Terms Modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md"></div>
+          
+          <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            
+            <div className="text-center mb-6">
+              <span className="text-4xl">🎉</span>
+              <h3 className="text-2xl font-extrabold text-primary mt-2">Welcome to OBEAG!</h3>
+              <p className="text-muted-foreground text-xs mt-1">OhaBuEnyi Age Grade Digital Portal</p>
+            </div>
+            
+            <div className="space-y-4 text-sm text-foreground/90 leading-relaxed mb-6">
+              <p className="font-semibold text-foreground">
+                Dear {session?.user?.name || 'Member'}, we are excited to have you onboard!
+              </p>
+              <p>
+                This application serves as our official ledger and communication tool. Before entering, 
+                you must read and accept our Terms of Use, specifically regarding the integrity of bank transfers 
+                and payments, and our use of essential session cookies.
+              </p>
+              
+              <div className="flex gap-3 justify-center py-2">
+                <Link
+                  href="/constitution"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-4 py-2.5 rounded-xl hover:bg-primary/20 transition cursor-pointer"
+                >
+                  📖 Read Constitution
+                </Link>
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground bg-muted hover:bg-muted-foreground/10 px-4 py-2.5 rounded-xl transition cursor-pointer"
+                >
+                  📜 View Detailed Terms
+                </Link>
+              </div>
+
+              {/* Scrollable Terms Excerpt */}
+              <div className="bg-muted/40 p-4 rounded-xl border border-border text-xs max-h-32 overflow-y-auto space-y-2 text-muted-foreground">
+                <p className="font-bold text-foreground">1. Payment Verification Integrity</p>
+                <p>You must complete a bank transfer to the age grade UBA account before claiming payment in the app. Falsifying request submissions will lead to account suspension and fines.</p>
+                <p className="font-bold text-foreground">2. Cookies Consent</p>
+                <p>This portal uses first-party session cookies solely to securely authenticate and keep you signed in. No third-party trackers are utilized.</p>
+              </div>
+
+              {/* Acceptance Checkbox */}
+              <label className="flex items-start gap-2.5 p-3 rounded-lg border border-border/80 bg-muted/20 hover:bg-muted/40 transition cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary cursor-pointer"
+                />
+                <span className="text-xs text-muted-foreground">
+                  I accept the Terms and Conditions of use and consent to the storage of essential session cookies.
+                </span>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <button
+              type="button"
+              disabled={!acceptedTerms}
+              onClick={() => {
+                if (session?.user?.id) {
+                  localStorage.setItem(`obeag_terms_accepted_${session.user.id}`, 'true');
+                  setShowOnboarding(false);
+                  // Trigger tutorial
+                  const tutCompleted = localStorage.getItem(`obeag_tutorial_completed_${session.user.id}`);
+                  if (tutCompleted !== 'true') {
+                    setShowTutorial(true);
+                  }
+                }
+              }}
+              className="w-full py-3 px-4 text-center border border-transparent text-sm font-semibold rounded-lg text-primary-foreground btn-gradient focus:outline-none transition disabled:opacity-50 cursor-pointer"
+            >
+              Accept & Enter Portal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tutorial Overlay */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-40 pointer-events-none">
+          {/* Transparent click-blocker to prevent clicking page items during tour */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] pointer-events-auto"></div>
+
+          {/* Floating Tutorial Info Card */}
+          <div className="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md bg-card border-2 border-primary shadow-2xl p-5 rounded-2xl pointer-events-auto z-50 animate-in slide-in-from-bottom duration-300">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
+            
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                Step {tutorialStep + 1} of {tutorialSteps.length}
+              </span>
+              <button
+                onClick={() => {
+                  if (session?.user?.id) {
+                    localStorage.setItem(`obeag_tutorial_completed_${session.user.id}`, 'true');
+                  }
+                  setShowTutorial(false);
+                }}
+                className="text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                Skip Tour
+              </button>
+            </div>
+
+            <h4 className="text-lg font-bold text-foreground mb-1">
+              {tutorialSteps[tutorialStep].title}
+            </h4>
+            <p className="text-muted-foreground text-xs leading-relaxed mb-4">
+              {tutorialSteps[tutorialStep].content}
+            </p>
+
+            <div className="flex justify-between items-center">
+              <div className="flex gap-1">
+                {tutorialSteps.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-1.5 w-1.5 rounded-full transition-all duration-200 ${
+                      idx === tutorialStep ? 'bg-primary w-4' : 'bg-muted-foreground/30'
+                    }`}
+                  ></span>
+                ))}
+              </div>
+              
+              <div className="flex gap-2">
+                {tutorialStep > 0 && (
+                  <button
+                    onClick={() => setTutorialStep(prev => prev - 1)}
+                    className="px-3 py-1.5 text-xs font-semibold text-foreground bg-muted border border-border rounded-lg hover:bg-muted/80 transition cursor-pointer"
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (tutorialStep < tutorialSteps.length - 1) {
+                      setTutorialStep(prev => prev + 1);
+                    } else {
+                      if (session?.user?.id) {
+                        localStorage.setItem(`obeag_tutorial_completed_${session.user.id}`, 'true');
+                      }
+                      setShowTutorial(false);
+                    }
+                  }}
+                  className="px-4 py-1.5 text-xs font-bold text-primary-foreground btn-gradient rounded-lg transition cursor-pointer"
+                >
+                  {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

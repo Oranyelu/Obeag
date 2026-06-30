@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/app/lib/prisma';
 import { Navbar } from '@/app/components/Navbar';
 import { Footer } from '@/app/components/Footer';
+import { BottomNavbar } from '@/app/components/BottomNavbar';
 
 export default async function DashboardLayout({
   children,
@@ -26,13 +27,14 @@ export default async function DashboardLayout({
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Navbar unreadCount={unreadCount} />
 
-      <main className="flex-grow py-10">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+      <main className="flex-grow pt-6 pb-24 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>
 
       <Footer />
+      <BottomNavbar unreadCount={unreadCount} />
     </div>
   );
 }
