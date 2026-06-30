@@ -61,6 +61,15 @@ export default function DashboardPage() {
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState('');
   const [showAllDues, setShowAllDues] = useState(false);
+  const [paymentModal, setPaymentModal] = useState<{
+    isOpen: boolean;
+    dueIds: string[];
+    totalAmount: number;
+  }>({
+    isOpen: false,
+    dueIds: [],
+    totalAmount: 0,
+  });
 
   useEffect(() => {
     fetchDashboardData();
@@ -93,56 +102,45 @@ export default function DashboardPage() {
     }
   };
 
-  const handlePay = async (dueId: string) => {
-    if (!confirm('Submit a payment confirmation request for this due? Make sure you have transferred the amount to the association bank account.')) return;
-    
-    setIsPaying(true);
-    try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dueId }),
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert('Payment request submitted! Waiting for administrator to confirm.');
-        fetchDashboardData();
-      } else {
-        alert(result.error || 'Payment request failed.');
-      }
-    } catch (error) {
-      console.error('Payment error', error);
-      alert('An error occurred.');
-    } finally {
-      setIsPaying(false);
-    }
+  const handlePay = (dueId: string) => {
+    const due = data?.dues.find(d => d.id === dueId);
+    if (!due) return;
+    setPaymentModal({
+      isOpen: true,
+      dueIds: [dueId],
+      totalAmount: due.amount,
+    });
   };
 
-  const handlePayAll = async () => {
+  const handlePayAll = () => {
     if (!data) return;
     const outstandingDues = data.dues.filter(due => !due.isPaid && !due.isPending);
     if (outstandingDues.length === 0) return;
     
     const totalAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
-    
-    if (!confirm(`Submit a payment confirmation request for all outstanding dues? Total amount to pay is ₦${totalAmount.toLocaleString()}. Make sure you have transferred the amount to the association bank account.`)) return;
-    
+    setPaymentModal({
+      isOpen: true,
+      dueIds: outstandingDues.map(due => due.id),
+      totalAmount,
+    });
+  };
+
+  const submitPayment = async () => {
     setIsPaying(true);
     try {
-      const dueIds = outstandingDues.map(due => due.id);
       const res = await fetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dueIds }),
+        body: JSON.stringify({ dueIds: paymentModal.dueIds }),
       });
 
       const result = await res.json();
       if (res.ok) {
-        alert('All payment requests submitted! Waiting for administrator to confirm.');
+        alert('Payment request submitted! Waiting for administrator to confirm.');
+        setPaymentModal(prev => ({ ...prev, isOpen: false }));
         fetchDashboardData();
       } else {
-        alert(result.error || 'Payment requests failed.');
+        alert(result.error || 'Payment request failed.');
       }
     } catch (error) {
       console.error('Payment error', error);
@@ -460,6 +458,83 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Payment Confirmation Modal */}
+      {paymentModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => !isPaying && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+          ></div>
+          
+          {/* Modal Card */}
+          <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            
+            <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
+              <span>🏦</span> Bank Transfer Details
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+              Please transfer the total due amount to the account details below, then click the **"I have sent the money"** button to submit your request for approval.
+            </p>
+
+            {/* Account Details Box */}
+            <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-3 font-mono text-sm my-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-sans">Bank Name:</span>
+                <span className="font-semibold text-foreground">United Bank of Africa (UBA)</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-sans">Account Name:</span>
+                <span className="font-semibold text-foreground text-right font-sans">OhaBuEnyi Age grade</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-sans">Account Number:</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-primary text-base">2277356114</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('2277356114');
+                      alert('Account number copied to clipboard!');
+                    }}
+                    className="px-2 py-0.5 text-[10px] font-sans font-semibold rounded bg-primary/10 text-primary hover:bg-primary/20 transition cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center border-t border-border pt-3">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-sans font-bold">Total to Pay:</span>
+                <span className="font-extrabold text-foreground text-lg text-primary font-sans">
+                  ₦{paymentModal.totalAmount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                disabled={isPaying}
+                onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+                className="flex-1 py-2 px-4 border border-border text-sm font-semibold rounded-lg text-foreground hover:bg-muted transition disabled:opacity-50 cursor-pointer text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isPaying}
+                onClick={submitPayment}
+                className="flex-1 py-2 px-4 border border-transparent text-sm font-semibold rounded-lg text-primary-foreground btn-gradient focus:outline-none transition disabled:opacity-50 cursor-pointer shadow-sm text-center"
+              >
+                {isPaying ? 'Submitting...' : 'I have sent the money'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
