@@ -40,64 +40,79 @@ export async function POST(request: Request) {
     const cleanedCode = code.trim().toUpperCase();
     const verificationCode = await prisma.verificationCode.findUnique({
       where: { code: cleanedCode },
+      include: { usedByUser: true }
     });
 
     if (!verificationCode) {
       return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 });
     }
 
-    if (verificationCode.isUsed) {
+    const codeUser = verificationCode.usedByUser;
+    const isCodeUserRejected = codeUser?.status === 'REJECTED';
+
+    if (verificationCode.isUsed && !isCodeUserRejected) {
       return NextResponse.json({ error: 'This verification code has already been used' }, { status: 400 });
     }
 
     // 4. Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const emailUser = await prisma.user.findUnique({
       where: { email },
     });
+    const isEmailUserRejected = emailUser?.status === 'REJECTED';
 
-    if (existingUser) {
+    if (emailUser && !isEmailUserRejected) {
       return NextResponse.json({ error: 'A user with this email address already exists' }, { status: 400 });
     }
 
     // 5. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 6. Create or update User and update Code in transaction
-    const result = await prisma.$transaction(async (tx) => {
-      let registeredUser;
+    // Collect IDs of rejected users to delete
+    const rejectedUserIds = new Set<string>();
+    if (codeUser && isCodeUserRejected) rejectedUserIds.add(codeUser.id);
+    if (emailUser && isEmailUserRejected) rejectedUserIds.add(emailUser.id);
 
-      if (verificationCode.usedByUserId) {
-        // Pre-registered user profile already exists, update it with their real info
-        registeredUser = await tx.user.update({
-          where: { id: verificationCode.usedByUserId },
-          data: {
-            email,
-            password: hashedPassword,
-            status: 'PENDING_APPROVAL',
-            dob: dobDate,
-            phone,
-            community,
-            profilePicture,
-            birthCert,
-          },
+    // 6. Create User and update Code in transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Delete old rejected users and their associated records
+      for (const rejectedId of rejectedUserIds) {
+        // Delete payments
+        await tx.payment.deleteMany({
+          where: { userId: rejectedId }
         });
-      } else {
-        // No pre-registered user exists, create a new one
-        registeredUser = await tx.user.create({
+        // Delete notifications
+        await tx.notification.deleteMany({
+          where: { userId: rejectedId }
+        });
+        // Detach verification codes
+        await tx.verificationCode.updateMany({
+          where: { usedByUserId: rejectedId },
           data: {
-            email,
-            password: hashedPassword,
-            name: verificationCode.name,
-            role: 'USER',
-            status: 'PENDING_APPROVAL',
-            dob: dobDate,
-            phone,
-            community,
-            profilePicture,
-            birthCert,
-          },
+            isUsed: false,
+            usedByUserId: null
+          }
+        });
+        // Delete user
+        await tx.user.delete({
+          where: { id: rejectedId }
         });
       }
+
+      // Create a brand new user profile
+      const registeredUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name: verificationCode.name,
+          role: 'USER',
+          status: 'PENDING_APPROVAL',
+          dob: dobDate,
+          phone,
+          community,
+          profilePicture,
+          birthCert,
+        },
+      });
 
       await tx.verificationCode.update({
         where: { id: verificationCode.id },

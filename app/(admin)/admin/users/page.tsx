@@ -37,6 +37,7 @@ export default function UserManagementPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected'>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [codeSearchQuery, setCodeSearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -118,6 +119,14 @@ export default function UserManagementPage() {
   const approvedUsers = users.filter(u => u.status === 'APPROVED');
   const rejectedUsers = users.filter(u => u.status === 'REJECTED');
 
+  const filteredCodes = codes.filter((c) => {
+    const searchLower = codeSearchQuery.toLowerCase();
+    const matchesAssignedName = c.name.toLowerCase().includes(searchLower);
+    const matchesUsedByName = c.usedByUser?.name.toLowerCase().includes(searchLower) || false;
+    const matchesCode = c.code.toLowerCase().includes(searchLower);
+    return matchesAssignedName || matchesUsedByName || matchesCode;
+  });
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       
@@ -187,45 +196,66 @@ export default function UserManagementPage() {
           
           {/* 1. CODES TAB */}
           {activeTab === 'codes' && (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted">
-                  <tr>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Code</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned Member Name</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Used By</th>
-                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created At</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-card divide-y divide-border">
-                  {codes.map((c) => (
-                    <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-primary tracking-widest">{c.code}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{c.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${c.isUsed ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                          {c.isUsed ? 'Used' : 'Unused'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                        {c.usedByUser ? (
-                          <div>
-                            <div className="font-semibold text-foreground">{c.usedByUser.name}</div>
-                            <div className="text-xs">{c.usedByUser.email}</div>
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                  {codes.length === 0 && (
+            <div className="space-y-4 p-6">
+              <div className="max-w-md relative">
+                <input
+                  type="text"
+                  placeholder="Search code, assigned name, or user..."
+                  value={codeSearchQuery}
+                  onChange={(e) => setCodeSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2.5 pl-10 border border-input bg-background text-foreground rounded-lg focus:ring-1 focus:ring-primary focus:outline-none text-sm"
+                />
+                <span className="absolute left-3 top-3 text-muted-foreground text-sm">🔍</span>
+                {codeSearchQuery && (
+                  <button
+                    onClick={() => setCodeSearchQuery('')}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto border border-border/60 rounded-lg">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted">
                     <tr>
-                      <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">No registration codes generated yet.</td>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Code</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assigned Member Name</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Used By</th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created At</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-card divide-y divide-border">
+                    {filteredCodes.map((c) => (
+                      <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-primary tracking-widest">{c.code}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{c.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${c.isUsed ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                            {c.isUsed ? 'Used' : 'Unused'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                          {c.usedByUser ? (
+                            <div>
+                              <div className="font-semibold text-foreground">{c.usedByUser.name}</div>
+                              <div className="text-xs">{c.usedByUser.email}</div>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                    {filteredCodes.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">No matching codes found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
