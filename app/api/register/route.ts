@@ -72,6 +72,37 @@ export async function POST(request: Request) {
     if (codeUser && isCodeUserRejected) rejectedUserIds.add(codeUser.id);
     if (emailUser && isEmailUserRejected) rejectedUserIds.add(emailUser.id);
 
+    // 5b. Verify that no active member already bears the same name
+    let isNameDuplicate = false;
+    try {
+      const existingUserWithName = await prisma.user.findFirst({
+        where: {
+          name: { equals: verificationCode.name, mode: 'insensitive' },
+          status: { in: ['APPROVED', 'PENDING_APPROVAL'] },
+          id: { notIn: Array.from(rejectedUserIds) }
+        }
+      });
+      if (existingUserWithName) isNameDuplicate = true;
+    } catch (err) {
+      // Fallback for SQLite
+      const activeUsers = await prisma.user.findMany({
+        where: {
+          status: { in: ['APPROVED', 'PENDING_APPROVAL'] },
+          id: { notIn: Array.from(rejectedUserIds) }
+        },
+        select: { name: true }
+      });
+      isNameDuplicate = activeUsers.some(
+        u => u.name.toLowerCase() === verificationCode.name.toLowerCase()
+      );
+    }
+
+    if (isNameDuplicate) {
+      return NextResponse.json({ 
+        error: 'A member with this name is already registered in the system.' 
+      }, { status: 400 });
+    }
+
     // 6. Create User and update Code in transaction
     const result = await prisma.$transaction(async (tx) => {
       // Delete old rejected users and their associated records
