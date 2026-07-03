@@ -129,21 +129,43 @@ export async function POST(request: Request) {
         });
       }
 
-      // Create a brand new user profile
-      const registeredUser = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          name: verificationCode.name,
-          role: 'USER',
-          status: 'PENDING_APPROVAL',
-          dob: dobDate,
-          phone,
-          community,
-          profilePicture,
-          birthCert,
-        },
-      });
+      const existingPlaceholderUser = verificationCode.usedByUser;
+      const isPlaceholder = existingPlaceholderUser && existingPlaceholderUser.status === 'PRE_REGISTERED';
+
+      let registeredUser;
+
+      if (isPlaceholder) {
+        // Reconcile/update the existing placeholder user (preserves payments!)
+        registeredUser = await tx.user.update({
+          where: { id: existingPlaceholderUser.id },
+          data: {
+            email,
+            password: hashedPassword,
+            status: 'PENDING_APPROVAL',
+            dob: dobDate,
+            phone,
+            community,
+            profilePicture,
+            birthCert,
+          },
+        });
+      } else {
+        // Create a brand new user profile
+        registeredUser = await tx.user.create({
+          data: {
+            email,
+            password: hashedPassword,
+            name: verificationCode.name,
+            role: 'USER',
+            status: 'PENDING_APPROVAL',
+            dob: dobDate,
+            phone,
+            community,
+            profilePicture,
+            birthCert,
+          },
+        });
+      }
 
       await tx.verificationCode.update({
         where: { id: verificationCode.id },

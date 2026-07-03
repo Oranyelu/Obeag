@@ -84,7 +84,22 @@ export default function FinancesPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold text-primary">Financial Records</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Financial Records</h1>
+          <p className="text-muted-foreground text-sm">Audit income, track group expenses, and export financial sheets.</p>
+        </div>
+        <a
+          href="/api/admin/finances/export"
+          download
+          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition shadow hover:shadow-lg cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Export Ledger (CSV)
+        </a>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -50,6 +50,8 @@ export async function GET() {
         community: user.community,
         profilePicture: user.profilePicture,
         birthCert: user.birthCert,
+        flaggedReason: user.flaggedReason,
+        flaggedAt: user.flaggedAt ? user.flaggedAt.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
         financials: {
           totalContributed,

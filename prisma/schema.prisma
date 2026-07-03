@@ -26,6 +26,8 @@ model User {
   payments       Payment[]
   notifications  Notification[]
   verificationCode VerificationCode?
+  flaggedReason  String?
+  flaggedAt      DateTime?
 }
 
 model VerificationCode {

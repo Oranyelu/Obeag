@@ -31,6 +31,8 @@ interface User {
   community: string;
   profilePicture: string;
   birthCert: string;
+  flaggedReason?: string | null;
+  flaggedAt?: string | null;
   createdAt: string;
   financials: {
     totalContributed: number;
@@ -58,13 +60,24 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [newCodeName, setNewCodeName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected' | 'flagged'>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [codeSearchQuery, setCodeSearchQuery] = useState('');
   
   // Detail Modal state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isMarkingPaid, setIsMarkingPaid] = useState<string | null>(null);
+
+  // Flagging state
+  const [showFlagForm, setShowFlagForm] = useState(false);
+  const [flagReason, setFlagReason] = useState('DOCUMENT_MISMATCH');
+  const [isFlagging, setIsFlagging] = useState(false);
+
+  const handleViewDetails = (user: User) => {
+    setSelectedUser(user);
+    setShowFlagForm(false);
+    setFlagReason('DOCUMENT_MISMATCH');
+  };
 
   useEffect(() => {
     fetchData();
@@ -177,9 +190,36 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleFlagUser = async (userId: string) => {
+    setIsFlagging(true);
+    try {
+      const res = await fetch('/api/admin/users/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action: 'FLAG', flaggedReason: flagReason }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setShowFlagForm(false);
+        setFlagReason('DOCUMENT_MISMATCH');
+        setSelectedUser(null); // Close details modal
+        fetchData(); // Refresh list
+      } else {
+        alert(data.error || 'Flagging action failed');
+      }
+    } catch (error) {
+      console.error('Error flagging user:', error);
+      alert('An error occurred.');
+    } finally {
+      setIsFlagging(false);
+    }
+  };
+
   const pendingUsers = users.filter(u => u.status === 'PENDING_APPROVAL');
   const approvedUsers = users.filter(u => u.status === 'APPROVED');
   const rejectedUsers = users.filter(u => u.status === 'REJECTED');
+  const flaggedUsers = users.filter(u => u.status === 'FLAGGED');
 
   const filteredCodes = codes.filter((c) => {
     const searchLower = codeSearchQuery.toLowerCase();
@@ -242,6 +282,17 @@ export default function UserManagementPage() {
           className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === 'approved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Approved Members ({approvedUsers.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('flagged')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative ${activeTab === 'flagged' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          Flagged / Revisions
+          {flaggedUsers.length > 0 && (
+            <span className="ml-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+              {flaggedUsers.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('rejected')}
@@ -371,7 +422,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => setSelectedUser(u)}
+                            onClick={() => handleViewDetails(u)}
                             className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
                           >
                             Details
@@ -443,7 +494,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(u.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <button
-                          onClick={() => setSelectedUser(u)}
+                          onClick={() => handleViewDetails(u)}
                           className="bg-primary hover:opacity-90 text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
                         >
                           View Ledger & Info
@@ -454,6 +505,64 @@ export default function UserManagementPage() {
                   {approvedUsers.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">No approved members found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 3b. FLAGGED TAB */}
+          {activeTab === 'flagged' && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
+                  <tr>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Photo</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name & Email</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lacking / Issue</th>
+                    <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Flagged At</th>
+                    <th scope="col" className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-card divide-y divide-border">
+                  {flaggedUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border bg-muted">
+                          {u.profilePicture ? (
+                            <Image src={u.profilePicture} alt={u.name} fill className="object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground">{u.name[0]}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-foreground">{u.name}</div>
+                        <div className="text-xs text-muted-foreground">{u.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        {u.flaggedReason === 'DOCUMENT_MISMATCH' && 'Document Mismatch'}
+                        {u.flaggedReason === 'INVALID_BIRTH_CERT' && 'Birth Certificate Required'}
+                        {u.flaggedReason === 'INVALID_PROFILE_PIC' && 'Profile Picture Required'}
+                        {u.flaggedReason === 'INCOMPLETE_NAME' && 'Incomplete Name'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                        {u.flaggedAt ? new Date(u.flaggedAt).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button
+                          onClick={() => handleViewDetails(u)}
+                          className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                        >
+                          Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {flaggedUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">No flagged accounts currently.</td>
                     </tr>
                   )}
                 </tbody>
@@ -485,7 +594,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => setSelectedUser(u)}
+                            onClick={() => handleViewDetails(u)}
                             className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
                           >
                             Details
@@ -711,6 +820,75 @@ export default function UserManagementPage() {
                     </div>
 
                   </div>
+                </div>
+              )}
+
+              {/* Flagged Status Banner */}
+              {selectedUser.status === 'FLAGGED' && (
+                <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-xl text-sm mt-4 text-orange-600 dark:text-orange-400 font-semibold">
+                  ⚠️ This profile is currently flagged for revision.
+                  <span className="block text-xs text-muted-foreground font-normal mt-1">
+                    Reason: {selectedUser.flaggedReason === 'DOCUMENT_MISMATCH' && 'Information mismatch on documents.'}
+                    {selectedUser.flaggedReason === 'INVALID_BIRTH_CERT' && 'User did not upload correct birth certificate.'}
+                    {selectedUser.flaggedReason === 'INVALID_PROFILE_PIC' && 'Profile picture not visible or inappropriate.'}
+                    {selectedUser.flaggedReason === 'INCOMPLETE_NAME' && 'Incomplete name details.'}
+                  </span>
+                </div>
+              )}
+
+              {/* Flagging Option */}
+              {selectedUser.status !== 'REJECTED' && selectedUser.status !== 'FLAGGED' && (
+                <div className="bg-orange-500/5 border border-orange-500/20 p-4 rounded-xl space-y-3 mt-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-bold text-orange-600 dark:text-orange-400">Flag Account for Revision</h4>
+                      <p className="text-xs text-muted-foreground">Ask the user to correct or upload specific information before approval.</p>
+                    </div>
+                    {!showFlagForm && (
+                      <button
+                        onClick={() => setShowFlagForm(true)}
+                        className="bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer"
+                      >
+                        Request Revision
+                      </button>
+                    )}
+                  </div>
+
+                  {showFlagForm && (
+                    <div className="flex flex-col sm:flex-row gap-3 items-end pt-2 border-t border-orange-500/10">
+                      <div className="flex-1 w-full space-y-1">
+                        <label className="block text-xs font-semibold text-foreground">Select Lacking Item / Issue:</label>
+                        <select
+                          value={flagReason}
+                          onChange={(e) => setFlagReason(e.target.value)}
+                          className="w-full rounded-lg border border-input bg-background text-foreground text-xs px-3 py-2 focus:ring-1 focus:ring-primary focus:outline-none"
+                        >
+                          <option value="DOCUMENT_MISMATCH">Information on document mismatch</option>
+                          <option value="INVALID_BIRTH_CERT">User did not upload correct birth certificate</option>
+                          <option value="INVALID_PROFILE_PIC">Profile picture not visible or inappropriate picture</option>
+                          <option value="INCOMPLETE_NAME">Incomplete name (missing middle name or wrong order)</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
+                        <button
+                          onClick={() => {
+                            setShowFlagForm(false);
+                            setFlagReason('DOCUMENT_MISMATCH');
+                          }}
+                          className="bg-secondary hover:bg-muted text-foreground text-xs font-semibold px-3 py-2 rounded-lg border border-border cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleFlagUser(selectedUser.id)}
+                          disabled={isFlagging}
+                          className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-xs font-semibold px-3 py-2 rounded-lg transition cursor-pointer"
+                        >
+                          {isFlagging ? 'Flagging...' : 'Confirm Flag'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
