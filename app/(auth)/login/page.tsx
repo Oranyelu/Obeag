@@ -79,10 +79,15 @@ function LoginForm() {
             client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1046187979607-m17nch2aipj9eb2ep80n8ep273n35pqp.apps.googleusercontent.com',
             callback: handleGoogleCallback,
           });
-          window.google.accounts.id.renderButton(
-            document.getElementById('google-signin-btn'),
-            { theme: 'outline', size: 'large', text: 'signin_with', width: '100%' }
-          );
+          const targetBtn = document.getElementById('google-signin-btn');
+          if (targetBtn) {
+            window.google.accounts.id.renderButton(
+              targetBtn,
+              { theme: 'outline', size: 'large', text: 'signin_with', width: '100%' }
+            );
+          } else {
+            console.warn('Google sign-in button element not found in DOM');
+          }
         }
       };
     };

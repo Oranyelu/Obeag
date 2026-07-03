@@ -222,10 +222,15 @@ export default function DashboardPage() {
           client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1046187979607-m17nch2aipj9eb2ep80n8ep273n35pqp.apps.googleusercontent.com',
           callback: handleGoogleCallback,
         });
-        window.google.accounts.id.renderButton(
-          document.getElementById('dashboard-google-link'),
-          { theme: 'outline', size: 'medium', text: 'signup_with' }
-        );
+        const targetDashLink = document.getElementById('dashboard-google-link');
+        if (targetDashLink) {
+          window.google.accounts.id.renderButton(
+            targetDashLink,
+            { theme: 'outline', size: 'medium', text: 'signup_with' }
+          );
+        } else {
+          console.warn('Dashboard Google link element not found in DOM');
+        }
       }
     };
   }, [profile]);

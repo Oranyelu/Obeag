@@ -87,10 +87,15 @@ export default function PendingApprovalPage() {
             client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1046187979607-m17nch2aipj9eb2ep80n8ep273n35pqp.apps.googleusercontent.com', // fallback/default for standard Google Identity
             callback: handleGoogleCallback,
           });
-          window.google.accounts.id.renderButton(
-            document.getElementById('google-link-container'),
-            { theme: 'outline', size: 'large', text: 'continue_with' }
-          );
+          const targetLink = document.getElementById('google-link-container');
+          if (targetLink) {
+            window.google.accounts.id.renderButton(
+              targetLink,
+              { theme: 'outline', size: 'large', text: 'continue_with' }
+            );
+          } else {
+            console.warn('Google link button container not found in DOM');
+          }
         }
       };
     };
