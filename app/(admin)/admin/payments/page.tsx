@@ -24,6 +24,7 @@ export default function ConfirmPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [confirmingPaymentAction, setConfirmingPaymentAction] = useState<{ paymentId: string; action: 'CONFIRM' | 'DECLINE' } | null>(null);
 
   useEffect(() => {
     fetchPayments();
@@ -44,9 +45,7 @@ export default function ConfirmPaymentsPage() {
     }
   };
 
-  const handlePaymentAction = async (paymentId: string, action: 'CONFIRM' | 'DECLINE') => {
-    if (!confirm(`Are you sure you want to ${action.toLowerCase()} this payment?`)) return;
-
+  const executePaymentAction = async (paymentId: string, action: 'CONFIRM' | 'DECLINE') => {
     setActioningId(paymentId);
     try {
       const res = await fetch('/api/admin/payments/confirm', {
@@ -59,11 +58,11 @@ export default function ConfirmPaymentsPage() {
       if (res.ok) {
         fetchPayments(); // Refresh lists
       } else {
-        alert(data.error || 'Action failed');
+        setTimeout(() => alert(data.error || 'Action failed'), 50);
       }
     } catch (error) {
       console.error('Error handling payment action:', error);
-      alert('An error occurred.');
+      setTimeout(() => alert('An error occurred.'), 50);
     } finally {
       setActioningId(null);
     }
@@ -89,7 +88,11 @@ export default function ConfirmPaymentsPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-8 text-center text-muted-foreground">Loading payment records...</div>
+          <div className="p-6 space-y-3 animate-pulse">
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+          </div>
         ) : pendingPayments.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground">
             No pending payment requests to verify.
@@ -128,20 +131,46 @@ export default function ConfirmPaymentsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => handlePaymentAction(p.id, 'CONFIRM')}
-                          disabled={actioningId !== null}
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => handlePaymentAction(p.id, 'DECLINE')}
-                          disabled={actioningId !== null}
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50"
-                        >
-                          Decline
-                        </button>
+                        {confirmingPaymentAction && confirmingPaymentAction.paymentId === p.id ? (
+                          <div className="flex gap-1.5 items-center bg-orange-500/5 border border-orange-500/20 px-2 py-1 rounded-lg">
+                            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 shrink-0">
+                              Confirm {confirmingPaymentAction.action === 'CONFIRM' ? 'Approval' : 'Rejection'}?
+                            </span>
+                            <button
+                              onClick={() => {
+                                executePaymentAction(p.id, confirmingPaymentAction.action);
+                                setConfirmingPaymentAction(null);
+                              }}
+                              disabled={actioningId !== null}
+                              className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmingPaymentAction(null)}
+                              className="bg-secondary text-foreground border border-border text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setConfirmingPaymentAction({ paymentId: p.id, action: 'CONFIRM' })}
+                              disabled={actioningId !== null}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setConfirmingPaymentAction({ paymentId: p.id, action: 'DECLINE' })}
+                              disabled={actioningId !== null}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                            >
+                              Decline
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -158,7 +187,11 @@ export default function ConfirmPaymentsPage() {
           <h2 className="text-xl font-bold text-foreground">Verification History</h2>
         </div>
         {isLoading ? (
-          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+          <div className="p-6 space-y-3 animate-pulse">
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+            <div className="h-10 bg-muted rounded-lg w-full"></div>
+          </div>
         ) : pastPayments.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">No verification history.</div>
         ) : (

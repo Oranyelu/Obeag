@@ -73,6 +73,10 @@ export default function UserManagementPage() {
   const [flagReason, setFlagReason] = useState('DOCUMENT_MISMATCH');
   const [isFlagging, setIsFlagging] = useState(false);
 
+  // Confirmation states
+  const [confirmingMarkPaidId, setConfirmingMarkPaidId] = useState<string | null>(null);
+  const [confirmingUserAction, setConfirmingUserAction] = useState<{ userId: string; action: 'APPROVE' | 'REJECT' } | null>(null);
+
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
     setShowFlagForm(false);
@@ -141,9 +145,7 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleUserAction = async (userId: string, action: 'APPROVE' | 'REJECT') => {
-    if (!confirm(`Are you sure you want to ${action.toLowerCase()} this user?`)) return;
-
+  const executeUserAction = async (userId: string, action: 'APPROVE' | 'REJECT') => {
     setActioningId(userId);
     try {
       const res = await fetch('/api/admin/users/approve', {
@@ -156,19 +158,17 @@ export default function UserManagementPage() {
       if (res.ok) {
         fetchData(); // Refresh list
       } else {
-        alert(data.error || 'Action failed');
+        setTimeout(() => alert(data.error || 'Action failed'), 50);
       }
     } catch (error) {
       console.error('Error handling user action', error);
-      alert('An error occurred.');
+      setTimeout(() => alert('An error occurred.'), 50);
     } finally {
       setActioningId(null);
     }
   };
 
-  const handleMarkPaid = async (userId: string, dueId: string) => {
-    if (!confirm('Are you sure you want to mark this due as paid for this user? This will record a manual completed payment.')) return;
-    
+  const executeMarkPaid = async (userId: string, dueId: string) => {
     setIsMarkingPaid(dueId);
     try {
       const res = await fetch('/api/admin/payments/mark-paid', {
@@ -180,11 +180,11 @@ export default function UserManagementPage() {
       if (res.ok) {
         await fetchData(); // This will also update the modal content via selectedUser update in fetchData
       } else {
-        alert(data.error || 'Failed to mark due as paid');
+        setTimeout(() => alert(data.error || 'Failed to mark due as paid'), 50);
       }
     } catch (error) {
       console.error('Error marking due as paid:', error);
-      alert('An error occurred.');
+      setTimeout(() => alert('An error occurred.'), 50);
     } finally {
       setIsMarkingPaid(null);
     }
@@ -303,7 +303,16 @@ export default function UserManagementPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-10 text-muted-foreground">Loading records...</div>
+        <div className="bg-card shadow-lg rounded-xl border border-border p-6 space-y-4 animate-pulse">
+          <div className="h-10 bg-muted rounded-lg w-1/3"></div>
+          <div className="space-y-3 pt-4">
+            <div className="h-12 bg-muted rounded-lg w-full"></div>
+            <div className="h-12 bg-muted rounded-lg w-full"></div>
+            <div className="h-12 bg-muted rounded-lg w-full"></div>
+            <div className="h-12 bg-muted rounded-lg w-full"></div>
+            <div className="h-12 bg-muted rounded-lg w-full"></div>
+          </div>
+        </div>
       ) : (
         <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
           
@@ -427,20 +436,46 @@ export default function UserManagementPage() {
                           >
                             Details
                           </button>
-                          <button
-                            onClick={() => handleUserAction(u.id, 'APPROVE')}
-                            disabled={actioningId !== null}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUserAction(u.id, 'REJECT')}
-                            disabled={actioningId !== null}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
-                          >
-                            Reject
-                          </button>
+                          {confirmingUserAction && confirmingUserAction.userId === u.id ? (
+                            <div className="flex gap-1.5 items-center bg-orange-500/5 border border-orange-500/20 px-2 py-1 rounded-lg">
+                              <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 shrink-0">
+                                Confirm {confirmingUserAction.action === 'APPROVE' ? 'Approve' : 'Reject'}?
+                              </span>
+                              <button
+                                onClick={() => {
+                                  executeUserAction(u.id, confirmingUserAction.action);
+                                  setConfirmingUserAction(null);
+                                }}
+                                disabled={actioningId !== null}
+                                className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setConfirmingUserAction(null)}
+                                className="bg-secondary text-foreground border border-border text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setConfirmingUserAction({ userId: u.id, action: 'APPROVE' })}
+                                disabled={actioningId !== null}
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => setConfirmingUserAction({ userId: u.id, action: 'REJECT' })}
+                                disabled={actioningId !== null}
+                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -599,13 +634,37 @@ export default function UserManagementPage() {
                           >
                             Details
                           </button>
-                          <button
-                            onClick={() => handleUserAction(u.id, 'APPROVE')}
-                            disabled={actioningId !== null}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
-                          >
-                            Approve Now
-                          </button>
+                          {confirmingUserAction && confirmingUserAction.userId === u.id ? (
+                            <div className="flex gap-1.5 items-center bg-orange-500/5 border border-orange-500/20 px-2 py-1 rounded-lg">
+                              <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 shrink-0">
+                                Confirm Approve?
+                              </span>
+                              <button
+                                onClick={() => {
+                                  executeUserAction(u.id, 'APPROVE');
+                                  setConfirmingUserAction(null);
+                                }}
+                                disabled={actioningId !== null}
+                                className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => setConfirmingUserAction(null)}
+                                className="bg-secondary text-foreground border border-border text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmingUserAction({ userId: u.id, action: 'APPROVE' })}
+                              disabled={actioningId !== null}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                            >
+                              Approve Now
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -803,13 +862,34 @@ export default function UserManagementPage() {
                               <div className="font-bold text-amber-600 dark:text-amber-400">
                                 ₦{item.amount.toLocaleString()}
                               </div>
-                              <button
-                                onClick={() => handleMarkPaid(selectedUser.id, item.dueId)}
-                                disabled={isMarkingPaid !== null}
-                                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-[11px] font-bold px-2 py-1 rounded transition whitespace-nowrap cursor-pointer"
-                              >
-                                {isMarkingPaid === item.dueId ? '...' : 'Mark Paid'}
-                              </button>
+                              {confirmingMarkPaidId === item.dueId ? (
+                                <div className="flex gap-1 items-center">
+                                  <button
+                                    onClick={() => {
+                                      setConfirmingMarkPaidId(null);
+                                      executeMarkPaid(selectedUser.id, item.dueId);
+                                    }}
+                                    disabled={isMarkingPaid !== null}
+                                    className="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded transition cursor-pointer"
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    onClick={() => setConfirmingMarkPaidId(null)}
+                                    className="bg-secondary text-foreground border border-border text-[10px] font-bold px-1.5 py-0.5 rounded transition cursor-pointer"
+                                  >
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setConfirmingMarkPaidId(item.dueId)}
+                                  disabled={isMarkingPaid !== null}
+                                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-[11px] font-bold px-2 py-1 rounded transition whitespace-nowrap cursor-pointer"
+                                >
+                                  {isMarkingPaid === item.dueId ? '...' : 'Mark Paid'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -900,24 +980,45 @@ export default function UserManagementPage() {
               {/* If user is PENDING approval, show approve/reject buttons in the modal too! */}
               {selectedUser.status === 'PENDING_APPROVAL' && (
                 <>
-                  <button
-                    onClick={() => {
-                      handleUserAction(selectedUser.id, 'APPROVE');
-                      setSelectedUser(null);
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
-                  >
-                    Approve Member
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleUserAction(selectedUser.id, 'REJECT');
-                      setSelectedUser(null);
-                    }}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
-                  >
-                    Reject Member
-                  </button>
+                  {confirmingUserAction && confirmingUserAction.userId === selectedUser.id ? (
+                    <div className="flex gap-2 items-center mr-auto bg-orange-500/5 border border-orange-500/20 px-3 py-1.5 rounded-lg animate-pulse-subtle">
+                      <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
+                        Confirm {confirmingUserAction.action === 'APPROVE' ? 'Approve' : 'Reject'} Member?
+                      </span>
+                      <button
+                        onClick={() => {
+                          executeUserAction(selectedUser.id, confirmingUserAction.action);
+                          setConfirmingUserAction(null);
+                          setSelectedUser(null);
+                        }}
+                        disabled={actioningId !== null}
+                        className="bg-primary text-primary-foreground px-3 py-1 rounded text-xs font-semibold transition cursor-pointer"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        onClick={() => setConfirmingUserAction(null)}
+                        className="bg-secondary text-foreground border border-border px-3 py-1 rounded text-xs font-semibold transition cursor-pointer"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setConfirmingUserAction({ userId: selectedUser.id, action: 'APPROVE' })}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      >
+                        Approve Member
+                      </button>
+                      <button
+                        onClick={() => setConfirmingUserAction({ userId: selectedUser.id, action: 'REJECT' })}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      >
+                        Reject Member
+                      </button>
+                    </>
+                  )}
                 </>
               )}
               
