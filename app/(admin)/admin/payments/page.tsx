@@ -25,6 +25,8 @@ export default function ConfirmPaymentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [confirmingPaymentAction, setConfirmingPaymentAction] = useState<{ paymentId: string; action: 'CONFIRM' | 'DECLINE' } | null>(null);
+  const [isConfirmingAll, setIsConfirmingAll] = useState(false);
+  const [isConfirmingAllLoading, setIsConfirmingAllLoading] = useState(false);
 
   useEffect(() => {
     fetchPayments();
@@ -68,6 +70,29 @@ export default function ConfirmPaymentsPage() {
     }
   };
 
+  const executeConfirmAll = async () => {
+    setIsConfirmingAllLoading(true);
+    try {
+      const res = await fetch('/api/admin/payments/confirm-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setIsConfirmingAll(false);
+        fetchPayments(); // Refresh lists
+      } else {
+        setTimeout(() => alert(data.error || 'Action failed'), 50);
+      }
+    } catch (error) {
+      console.error('Error confirming all payments:', error);
+      setTimeout(() => alert('An error occurred.'), 50);
+    } finally {
+      setIsConfirmingAllLoading(false);
+    }
+  };
+
   const pendingPayments = payments.filter(p => p.status === 'PENDING');
   const pastPayments = payments.filter(p => p.status !== 'PENDING');
 
@@ -80,11 +105,44 @@ export default function ConfirmPaymentsPage() {
 
       {/* Pending Payments Section */}
       <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
-        <div className="px-6 py-4 bg-muted/40 border-b border-border flex justify-between items-center">
-          <h2 className="text-xl font-bold text-foreground">Pending Confirmations</h2>
-          <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            {pendingPayments.length} Waiting
-          </span>
+        <div className="px-6 py-4 bg-muted/40 border-b border-border flex justify-between items-center flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-foreground">Pending Confirmations</h2>
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              {pendingPayments.length} Waiting
+            </span>
+          </div>
+          {pendingPayments.length > 0 && (
+            isConfirmingAll ? (
+              <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
+                  Confirm all {pendingPayments.length} payments?
+                </span>
+                <button
+                  onClick={executeConfirmAll}
+                  disabled={isConfirmingAllLoading}
+                  className="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isConfirmingAllLoading ? 'Confirming...' : 'Yes, Approve All'}
+                </button>
+                <button
+                  onClick={() => setIsConfirmingAll(false)}
+                  disabled={isConfirmingAllLoading}
+                  className="bg-secondary hover:bg-secondary/80 text-foreground border border-border text-xs font-semibold px-2.5 py-1 rounded-lg transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsConfirmingAll(true)}
+                disabled={isLoading || actioningId !== null}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+              >
+                Confirm All Payments
+              </button>
+            )
+          )}
         </div>
 
         {isLoading ? (
@@ -141,7 +199,7 @@ export default function ConfirmPaymentsPage() {
                                 executePaymentAction(p.id, confirmingPaymentAction.action);
                                 setConfirmingPaymentAction(null);
                               }}
-                              disabled={actioningId !== null}
+                              disabled={actioningId !== null || isConfirmingAllLoading}
                               className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded transition cursor-pointer"
                             >
                               Yes
@@ -157,14 +215,14 @@ export default function ConfirmPaymentsPage() {
                           <>
                             <button
                               onClick={() => setConfirmingPaymentAction({ paymentId: p.id, action: 'CONFIRM' })}
-                              disabled={actioningId !== null}
+                              disabled={actioningId !== null || isConfirmingAllLoading}
                               className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
                             >
                               Confirm
                             </button>
                             <button
                               onClick={() => setConfirmingPaymentAction({ paymentId: p.id, action: 'DECLINE' })}
-                              disabled={actioningId !== null}
+                              disabled={actioningId !== null || isConfirmingAllLoading}
                               className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
                             >
                               Decline
