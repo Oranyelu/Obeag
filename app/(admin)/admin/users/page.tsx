@@ -57,6 +57,7 @@ interface VerificationCode {
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [codes, setCodes] = useState<VerificationCode[]>([]);
+  const [dues, setDues] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newCodeName, setNewCodeName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -83,6 +84,62 @@ export default function UserManagementPage() {
     setFlagReason('DOCUMENT_MISMATCH');
   };
 
+  const handleViewCodeDetails = (code: VerificationCode) => {
+    const totalOwing = dues.reduce((sum, d) => sum + d.amount, 0);
+    const pseudoUser: User = {
+      id: `code-${code.id}`,
+      name: code.name,
+      email: `Registration Code: ${code.code}`,
+      role: 'USER',
+      status: 'NOT_ACTIVATED',
+      dob: '',
+      phone: 'N/A',
+      community: 'N/A',
+      profilePicture: '',
+      birthCert: '',
+      createdAt: code.createdAt,
+      financials: {
+        totalContributed: 0,
+        totalOwing: totalOwing,
+        contributedList: [],
+        owingList: dues.map((d) => ({
+          dueId: d.id,
+          title: d.title,
+          amount: d.amount,
+          dueDate: d.dueDate,
+          type: d.type,
+          isPending: false,
+        })),
+      },
+    };
+    setSelectedUser(pseudoUser);
+    setShowFlagForm(false);
+    setFlagReason('DOCUMENT_MISMATCH');
+  };
+
+  const handleRegenerateCode = async (codeId: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to regenerate the registration code for "${name}"? The existing code will be invalidated.`)) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/codes/regenerate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codeId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`New code successfully generated for ${name}: ${data.code.code}`);
+        fetchData(); // Refresh list
+      } else {
+        alert(data.error || 'Failed to regenerate code');
+      }
+    } catch (error) {
+      console.error('Error regenerating code:', error);
+      alert('An error occurred.');
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -90,24 +147,72 @@ export default function UserManagementPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [usersRes, codesRes] = await Promise.all([
+      const [usersRes, codesRes, duesRes] = await Promise.all([
         fetch('/api/admin/users'),
-        fetch('/api/admin/codes')
+        fetch('/api/admin/codes'),
+        fetch('/api/dues')
       ]);
 
+      let fetchedUsers: User[] = [];
+      let fetchedCodes: VerificationCode[] = [];
+      let fetchedDues: any[] = [];
+
       if (usersRes.ok) {
-        const fetchedUsers = await usersRes.json();
+        fetchedUsers = await usersRes.json();
         setUsers(fetchedUsers);
-        
-        // If a user details modal is open, refresh their state too
-        if (selectedUser) {
-          const updatedUser = fetchedUsers.find((u: User) => u.id === selectedUser.id);
+      }
+      if (codesRes.ok) {
+        fetchedCodes = await codesRes.json();
+        setCodes(fetchedCodes);
+      }
+      if (duesRes.ok) {
+        fetchedDues = await duesRes.json();
+        setDues(fetchedDues);
+      }
+
+      // If a details modal is open, refresh their state
+      if (selectedUser) {
+        if (selectedUser.id.startsWith('code-')) {
+          const codeId = selectedUser.id.replace('code-', '');
+          const updatedCode = fetchedCodes.find((c) => c.id === codeId);
+          if (updatedCode) {
+            // Re-create pseudo-user
+            const totalOwing = fetchedDues.reduce((sum, d) => sum + d.amount, 0);
+            const pseudoUser: User = {
+              id: `code-${updatedCode.id}`,
+              name: updatedCode.name,
+              email: `Registration Code: ${updatedCode.code}`,
+              role: 'USER',
+              status: 'NOT_ACTIVATED',
+              dob: '',
+              phone: 'N/A',
+              community: 'N/A',
+              profilePicture: '',
+              birthCert: '',
+              createdAt: updatedCode.createdAt,
+              financials: {
+                totalContributed: 0,
+                totalOwing: totalOwing,
+                contributedList: [],
+                owingList: fetchedDues.map((d) => ({
+                  dueId: d.id,
+                  title: d.title,
+                  amount: d.amount,
+                  dueDate: d.dueDate,
+                  type: d.type,
+                  isPending: false,
+                })),
+              },
+            };
+            setSelectedUser(pseudoUser);
+          }
+        } else {
+          const updatedUser = fetchedUsers.find((u) => u.id === selectedUser.id);
           if (updatedUser) {
             setSelectedUser(updatedUser);
           }
         }
       }
-      if (codesRes.ok) setCodes(await codesRes.json());
     } catch (error) {
       console.error('Failed to fetch data', error);
     } finally {
@@ -347,6 +452,7 @@ export default function UserManagementPage() {
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Used By</th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created At</th>
+                      <th scope="col" className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
@@ -368,11 +474,29 @@ export default function UserManagementPage() {
                           ) : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                          {!c.isUsed ? (
+                            <div className="flex justify-center gap-2">
+                              <button
+                                onClick={() => handleViewCodeDetails(c)}
+                                className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                              >
+                                Details
+                              </button>
+                              <button
+                                onClick={() => handleRegenerateCode(c.id, c.name)}
+                                className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                              >
+                                Regenerate Code
+                              </button>
+                            </div>
+                          ) : '-'}
+                        </td>
                       </tr>
                     ))}
                     {filteredCodes.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">No matching codes found.</td>
+                        <td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">No matching codes found.</td>
                       </tr>
                     )}
                   </tbody>
@@ -730,6 +854,8 @@ export default function UserManagementPage() {
                           ? 'bg-green-500/10 text-green-500'
                           : selectedUser.status === 'PENDING_APPROVAL'
                           ? 'bg-amber-500/10 text-amber-500'
+                          : selectedUser.status === 'NOT_ACTIVATED'
+                          ? 'bg-blue-500/10 text-blue-500'
                           : 'bg-red-500/10 text-red-500'
                       }`}>
                         {selectedUser.status.replace('_', ' ')}
@@ -748,10 +874,10 @@ export default function UserManagementPage() {
                     </div>
                     <div>
                       <span className="block font-semibold text-foreground text-xs">DATE OF BIRTH</span>
-                      {new Date(selectedUser.dob).toLocaleDateString()}
+                      {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : 'N/A'}
                     </div>
                     <div>
-                      <span className="block font-semibold text-foreground text-xs">JOINED DATE</span>
+                      <span className="block font-semibold text-foreground text-xs">CREATED DATE</span>
                       {new Date(selectedUser.createdAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -759,23 +885,25 @@ export default function UserManagementPage() {
               </div>
 
               {/* Document Link */}
-              <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📄</span>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground">Birth Certificate</h4>
-                    <p className="text-xs text-muted-foreground">Official proof of age document submitted during signup.</p>
+              {selectedUser.status !== 'NOT_ACTIVATED' && (
+                <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">📄</span>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground">Birth Certificate</h4>
+                      <p className="text-xs text-muted-foreground">Official proof of age document submitted during signup.</p>
+                    </div>
                   </div>
+                  <a
+                    href={selectedUser.birthCert}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold transition"
+                  >
+                    Open Document
+                  </a>
                 </div>
-                <a
-                  href={selectedUser.birthCert}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold transition"
-                >
-                  Open Document
-                </a>
-              </div>
+              )}
 
               {/* Financial Section */}
               {selectedUser.financials && (
@@ -917,7 +1045,7 @@ export default function UserManagementPage() {
               )}
 
               {/* Flagging Option */}
-              {selectedUser.status !== 'REJECTED' && selectedUser.status !== 'FLAGGED' && (
+              {selectedUser.status !== 'REJECTED' && selectedUser.status !== 'FLAGGED' && selectedUser.status !== 'NOT_ACTIVATED' && (
                 <div className="bg-orange-500/5 border border-orange-500/20 p-4 rounded-xl space-y-3 mt-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -977,6 +1105,20 @@ export default function UserManagementPage() {
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
               
+              {/* If user is NOT_ACTIVATED, show Regenerate Code button */}
+              {selectedUser.status === 'NOT_ACTIVATED' && (
+                <button
+                  onClick={() => {
+                    const codeId = selectedUser.id.replace('code-', '');
+                    handleRegenerateCode(codeId, selectedUser.name);
+                    setSelectedUser(null);
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  Regenerate Code
+                </button>
+              )}
+
               {/* If user is PENDING approval, show approve/reject buttons in the modal too! */}
               {selectedUser.status === 'PENDING_APPROVAL' && (
                 <>
