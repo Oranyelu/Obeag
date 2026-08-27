@@ -80,6 +80,12 @@ export async function GET() {
     });
 
     // 5. Calculate Stats
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { walletBalance: true },
+    });
+    const walletBalance = user?.walletBalance || 0;
+
     const totalDuesAmount = allDues.reduce((sum, due) => sum + due.amount, 0);
     const completedPayments = userPayments.filter(p => p.status === 'COMPLETED');
     const totalPaidAmount = completedPayments.reduce((sum, p) => sum + p.amount, 0);
@@ -98,7 +104,8 @@ export async function GET() {
         totalDuesAmount,
         totalPaidAmount,
         amountOwed,
-        percentagePaid
+        percentagePaid,
+        walletBalance
       }
     });
 

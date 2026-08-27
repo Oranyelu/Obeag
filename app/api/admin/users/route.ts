@@ -54,6 +54,7 @@ export async function GET() {
         flaggedAt: user.flaggedAt ? user.flaggedAt.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
         financials: {
+          walletBalance: user.walletBalance,
           totalContributed,
           totalOwing,
           contributedList: duesContributed.map((p) => ({

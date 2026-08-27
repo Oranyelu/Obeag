@@ -28,6 +28,7 @@ model User {
   verificationCode VerificationCode?
   flaggedReason  String?
   flaggedAt      DateTime?
+  walletBalance  Float            @default(0)
 }
 
 model VerificationCode {

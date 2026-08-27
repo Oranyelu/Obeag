@@ -44,6 +44,7 @@ interface DashboardData {
     totalPaidAmount: number;
     amountOwed: number;
     percentagePaid: number;
+    walletBalance: number;
   };
 }
 
@@ -441,6 +442,20 @@ export default function DashboardPage() {
               ? `You currently have outstanding dues of ₦${data.stats.amountOwed.toLocaleString()}. Please view the list below to settle your accounts via bank transfer, then submit a payment confirmation request.`
               : "Congratulations! You do not have any outstanding dues at this time."}
           </p>
+          {data.stats.walletBalance !== undefined && data.stats.walletBalance > 0 && (
+            <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">👛</span>
+                <div>
+                  <span className="block text-xs font-semibold text-primary uppercase tracking-wider">Wallet Balance (Excess Credit)</span>
+                  <span className="text-xs text-muted-foreground">Will be automatically applied to future dues</span>
+                </div>
+              </div>
+              <span className="text-2xl font-bold text-primary">
+                ₦{data.stats.walletBalance.toLocaleString()}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -515,6 +530,35 @@ export default function DashboardPage() {
                 </div>
               </li>
             ))}
+            {data.stats.walletBalance !== undefined && data.stats.walletBalance > 0 && (
+              <li className="bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors border-l-4 border-emerald-500">
+                <div className="px-6 py-5 sm:px-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-2">
+                          <span>👛</span> Wallet (Excess Credit)
+                        </p>
+                        <p className="ml-4 text-lg font-bold text-foreground">
+                          ₦{data.stats.walletBalance.toLocaleString()}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground col-span-2">
+                          This credit balance will be automatically applied to cover future dues.
+                        </p>
+                        <div>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                            Available Credit
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            )}
             {data.dues.length === 0 && (
               <li className="px-6 py-8 text-center text-muted-foreground">No dues found.</li>
             )}

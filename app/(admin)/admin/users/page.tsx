@@ -35,6 +35,7 @@ interface User {
   flaggedAt?: string | null;
   createdAt: string;
   financials: {
+    walletBalance: number;
     totalContributed: number;
     totalOwing: number;
     contributedList: FinancialDuePaid[];
@@ -78,6 +79,20 @@ export default function UserManagementPage() {
   const [confirmingMarkPaidId, setConfirmingMarkPaidId] = useState<string | null>(null);
   const [confirmingUserAction, setConfirmingUserAction] = useState<{ userId: string; action: 'APPROVE' | 'REJECT' } | null>(null);
 
+  // Bulk transaction modal state
+  const [bulkModal, setBulkModal] = useState<{
+    isOpen: boolean;
+    type: 'DEPOSIT' | 'WITHDRAW';
+    selectedUserId: string;
+    amount: string;
+  }>({
+    isOpen: false,
+    type: 'DEPOSIT',
+    selectedUserId: '',
+    amount: '',
+  });
+  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
     setShowFlagForm(false);
@@ -99,6 +114,7 @@ export default function UserManagementPage() {
       birthCert: '',
       createdAt: code.createdAt,
       financials: {
+        walletBalance: 0,
         totalContributed: 0,
         totalOwing: totalOwing,
         contributedList: [],
@@ -191,6 +207,7 @@ export default function UserManagementPage() {
               birthCert: '',
               createdAt: updatedCode.createdAt,
               financials: {
+                walletBalance: 0,
                 totalContributed: 0,
                 totalOwing: totalOwing,
                 contributedList: [],
@@ -321,6 +338,54 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { type, selectedUserId, amount } = bulkModal;
+
+    if (!selectedUserId) {
+      alert('Please select a member.');
+      return;
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert('Please enter a valid positive amount.');
+      return;
+    }
+
+    setIsBulkSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/payments/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUserId,
+          amount: parsedAmount,
+          action: type,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || 'Transaction processed successfully.');
+        setBulkModal({
+          isOpen: false,
+          type: 'DEPOSIT',
+          selectedUserId: '',
+          amount: '',
+        });
+        await fetchData(); // Refresh list to get updated wallet and dues
+      } else {
+        alert(data.error || 'Failed to process transaction.');
+      }
+    } catch (error) {
+      console.error('Error submitting bulk transaction:', error);
+      alert('An error occurred while processing the transaction.');
+    } finally {
+      setIsBulkSubmitting(false);
+    }
+  };
+
   const pendingUsers = users.filter(u => u.status === 'PENDING_APPROVAL');
   const approvedUsers = users.filter(u => u.status === 'APPROVED');
   const rejectedUsers = users.filter(u => u.status === 'REJECTED');
@@ -361,6 +426,25 @@ export default function UserManagementPage() {
             {isGenerating ? 'Generating...' : 'Generate 6-Digit Code'}
           </button>
         </form>
+      </div>
+
+      {/* Bulk Transaction Actions */}
+      <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-4 rounded-xl border border-border/60">
+        <div className="text-sm font-semibold text-foreground flex items-center mr-2">
+          <span>👛</span> &nbsp; Bulk Financial Operations:
+        </div>
+        <button
+          onClick={() => setBulkModal({ isOpen: true, type: 'DEPOSIT', selectedUserId: '', amount: '' })}
+          className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+        >
+          Pay Bulk Dues (Deposit)
+        </button>
+        <button
+          onClick={() => setBulkModal({ isOpen: true, type: 'WITHDRAW', selectedUserId: '', amount: '' })}
+          className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+        >
+          Deduct / Withdraw Bulk
+        </button>
       </div>
 
       {/* Tabs */}
@@ -911,7 +995,7 @@ export default function UserManagementPage() {
                   <h4 className="text-lg font-bold text-foreground">Financial Ledger</h4>
                   
                   {/* Financial Stats Summary */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl">
                       <span className="block text-xs font-semibold text-emerald-600 dark:text-emerald-400">TOTAL DUES CONTRIBUTED</span>
                       <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -922,6 +1006,12 @@ export default function UserManagementPage() {
                       <span className="block text-xs font-semibold text-amber-600 dark:text-amber-400">TOTAL DUES OWING</span>
                       <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                         ₦{selectedUser.financials.totalOwing.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl">
+                      <span className="block text-xs font-semibold text-primary">WALLET BALANCE</span>
+                      <span className="text-2xl font-bold text-primary">
+                        ₦{(selectedUser.financials.walletBalance || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -1172,6 +1262,94 @@ export default function UserManagementPage() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Transaction Modal */}
+      {bulkModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            <div className={`absolute top-0 left-0 w-full h-1.5 ${bulkModal.type === 'DEPOSIT' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-600 to-orange-500'}`}></div>
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/40">
+              <h2 className="text-xl font-bold text-foreground">
+                {bulkModal.type === 'DEPOSIT' ? 'Pay Bulk Dues' : 'Bulk Withdrawal / Deduction'}
+              </h2>
+              <button
+                onClick={() => setBulkModal(prev => ({ ...prev, isOpen: false }))}
+                className="text-muted-foreground hover:text-foreground text-xl font-semibold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleBulkSubmit}>
+              <div className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase">Transaction Type</label>
+                  <select
+                    value={bulkModal.type}
+                    onChange={(e) => setBulkModal(prev => ({ ...prev, type: e.target.value as 'DEPOSIT' | 'WITHDRAW' }))}
+                    className="w-full rounded-lg border border-input bg-background text-foreground text-sm px-3 py-2.5 focus:ring-1 focus:ring-primary focus:outline-none animate-none"
+                  >
+                    <option value="DEPOSIT">Deposit (Pay Bulk Dues)</option>
+                    <option value="WITHDRAW">Withdraw (Deduct Payment)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase">Select Member</label>
+                  <select
+                    value={bulkModal.selectedUserId}
+                    required
+                    onChange={(e) => setBulkModal(prev => ({ ...prev, selectedUserId: e.target.value }))}
+                    className="w-full rounded-lg border border-input bg-background text-foreground text-sm px-3 py-2.5 focus:ring-1 focus:ring-primary focus:outline-none"
+                  >
+                    <option value="">-- Choose Member --</option>
+                    {approvedUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase">Amount (₦)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    placeholder="Enter amount to transact"
+                    value={bulkModal.amount}
+                    onChange={(e) => setBulkModal(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full rounded-lg border border-input bg-background text-foreground text-sm px-3 py-2.5 focus:ring-1 focus:ring-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setBulkModal(prev => ({ ...prev, isOpen: false }))}
+                  className="bg-secondary text-foreground hover:bg-muted border border-border px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isBulkSubmitting}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition text-white cursor-pointer ${bulkModal.type === 'DEPOSIT' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} disabled:opacity-50`}
+                >
+                  {isBulkSubmitting ? 'Processing...' : bulkModal.type === 'DEPOSIT' ? 'Confirm Deposit' : 'Confirm Withdrawal'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
