@@ -50,8 +50,16 @@ interface VerificationCode {
   isUsed: boolean;
   createdAt: string;
   usedByUser?: {
+    id: string;
     name: string;
     email: string;
+    status?: string;
+    phone?: string;
+    community?: string;
+    dob?: string;
+    profilePicture?: string;
+    birthCert?: string;
+    createdAt?: string;
   };
 }
 
@@ -526,9 +534,9 @@ export default function UserManagementPage() {
           onClick={() => setActiveTab('pending')}
           className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          Pending Approvals
+          Pending Approvals ({pendingUsers.length})
           {pendingUsers.length > 0 && (
-            <span className="ml-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="ml-1.5 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
               {pendingUsers.length}
             </span>
           )}
@@ -554,9 +562,9 @@ export default function UserManagementPage() {
           onClick={() => setActiveTab('flagged')}
           className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative ${activeTab === 'flagged' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          Flagged / Revisions
+          Flagged / Revisions ({flaggedUsers.length})
           {flaggedUsers.length > 0 && (
-            <span className="ml-2 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="ml-1.5 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
               {flaggedUsers.length}
             </span>
           )}
@@ -663,15 +671,69 @@ export default function UserManagementPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                           {c.usedByUser ? (
-                            <div>
-                              <div className="font-semibold text-foreground">{c.usedByUser.name}</div>
-                              <div className="text-xs">{c.usedByUser.email}</div>
+                            <div className="flex items-center gap-3">
+                              {hasRealProfilePic(c.usedByUser.profilePicture) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage({ src: c.usedByUser!.profilePicture!, title: `${c.usedByUser!.name} - Profile Photo` })}
+                                  className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-primary/40 hover:border-primary shadow-sm hover:scale-105 transition-all group shrink-0 cursor-pointer"
+                                  title="Click to zoom photo"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={c.usedByUser.profilePicture}
+                                    alt={c.usedByUser.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
+                                    🔍
+                                  </div>
+                                </button>
+                              ) : (
+                                <div className="w-9 h-9 rounded-full border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-xs shrink-0">
+                                  {c.usedByUser.name[0]?.toUpperCase() || '?'}
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-semibold text-foreground flex items-center gap-2">
+                                  <span>{c.usedByUser.name}</span>
+                                  {c.usedByUser.status && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                                      c.usedByUser.status === 'APPROVED' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
+                                      c.usedByUser.status === 'PENDING_APPROVAL' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                                      'bg-muted text-muted-foreground'
+                                    }`}>
+                                      {c.usedByUser.status.replace('_', ' ')}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">{c.usedByUser.email}</div>
+                              </div>
                             </div>
-                          ) : '-'}
+                          ) : (
+                            <span className="text-muted-foreground italic text-xs">Unassigned / Pending Activation</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                          {!c.isUsed ? (
+                          {c.isUsed && c.usedByUser ? (
+                            <div className="flex justify-center gap-2">
+                              <button
+                                onClick={() => {
+                                  const fullUser = users.find(u => u.id === c.usedByUser?.id);
+                                  if (fullUser) {
+                                    handleViewDetails(fullUser);
+                                  } else {
+                                    handleViewCodeDetails(c);
+                                  }
+                                }}
+                                className="bg-primary hover:opacity-90 text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer shadow-sm"
+                                title="View full member profile, photo, and ledger"
+                              >
+                                View Member ↗
+                              </button>
+                            </div>
+                          ) : !c.isUsed ? (
                             <div className="flex justify-center gap-2">
                               <button
                                 onClick={() => handleViewCodeDetails(c)}
@@ -837,7 +899,23 @@ export default function UserManagementPage() {
                   ))}
                   {pendingUsers.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No members pending verification.</td>
+                      <td colSpan={6} className="px-6 py-14 text-center">
+                        <div className="max-w-md mx-auto space-y-3">
+                          <span className="text-3xl block">✅</span>
+                          <p className="text-sm font-bold text-foreground">No members currently pending verification</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            All registered member applications have been reviewed. You can inspect the photos, profiles, and financial ledgers of all active members in the Approved Members list.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('approved')}
+                            className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition cursor-pointer shadow-sm"
+                          >
+                            <span>View Approved Members ({approvedUsers.length})</span>
+                            <span>→</span>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -1160,8 +1238,22 @@ export default function UserManagementPage() {
                 </div>
               </div>
 
+              {/* Unactivated Informational Banner */}
+              {selectedUser.status === 'NOT_ACTIVATED' && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+                  <span className="text-2xl shrink-0">ℹ️</span>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400">Account Awaiting Member Activation</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This member was imported from the master ledger and has been assigned <strong className="font-mono text-foreground font-semibold">{selectedUser.email}</strong>.
+                      They have not yet completed online signup or uploaded their passport photograph. Once they activate their account using their 6-digit registration code at <span className="font-mono text-foreground font-semibold">/register</span>, their submitted photo and birth certificate will appear here for verification.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Verification Documents Block */}
-              {selectedUser.status !== 'NOT_ACTIVATED' && (
+              {selectedUser.status !== 'NOT_ACTIVATED' ? (
                 <div className="space-y-3">
                   <h4 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted-foreground">
                     Verification Documents
@@ -1255,6 +1347,35 @@ export default function UserManagementPage() {
                       ) : (
                         <span className="text-xs text-muted-foreground italic shrink-0">None</span>
                       )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted-foreground">
+                    Verification Documents
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-muted/20 border border-dashed border-border p-4 rounded-xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl opacity-50">📷</span>
+                        <div>
+                          <h4 className="text-sm font-bold text-foreground">Passport / Profile Photo</h4>
+                          <p className="text-xs text-amber-600 dark:text-amber-400">Awaiting member upload upon activation</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-secondary text-muted-foreground px-2 py-1 rounded font-medium shrink-0">Pending Signup</span>
+                    </div>
+
+                    <div className="bg-muted/20 border border-dashed border-border p-4 rounded-xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl opacity-50">📄</span>
+                        <div>
+                          <h4 className="text-sm font-bold text-foreground">Birth Certificate</h4>
+                          <p className="text-xs text-amber-600 dark:text-amber-400">Awaiting member upload upon activation</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-secondary text-muted-foreground px-2 py-1 rounded font-medium shrink-0">Pending Signup</span>
                     </div>
                   </div>
                 </div>

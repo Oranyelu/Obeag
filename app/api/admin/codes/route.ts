@@ -8,8 +8,16 @@ export async function GET() {
       include: {
         usedByUser: {
           select: {
+            id: true,
             name: true,
             email: true,
+            status: true,
+            phone: true,
+            community: true,
+            dob: true,
+            profilePicture: true,
+            birthCert: true,
+            createdAt: true,
           },
         },
       },

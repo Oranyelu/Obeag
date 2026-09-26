@@ -12,6 +12,7 @@ interface Payment {
     name: string;
     email: string;
     phone: string;
+    profilePicture?: string;
   };
   due: {
     title: string;
@@ -171,9 +172,23 @@ export default function ConfirmPaymentsPage() {
                 {pendingPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-semibold text-foreground">{p.user.name}</div>
-                      <div className="text-xs text-muted-foreground">{p.user.email}</div>
-                      <div className="text-[10px] text-muted-foreground font-mono">{p.user.phone}</div>
+                      <div className="flex items-center gap-3">
+                        {p.user.profilePicture && !p.user.profilePicture.includes('placeholder') ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={p.user.profilePicture} alt={p.user.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-sm shrink-0">
+                            {p.user.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-semibold text-foreground">{p.user.name}</div>
+                          <div className="text-xs text-muted-foreground">{p.user.email}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">{p.user.phone}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-semibold text-primary">{p.due.title}</div>
@@ -268,7 +283,22 @@ export default function ConfirmPaymentsPage() {
                 {pastPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                      <span className="font-medium text-foreground">{p.user.name}</span> ({p.user.email})
+                      <div className="flex items-center gap-2.5">
+                        {p.user.profilePicture && !p.user.profilePicture.includes('placeholder') ? (
+                          <div className="w-7 h-7 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={p.user.profilePicture} alt={p.user.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-xs shrink-0">
+                            {p.user.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-medium text-foreground">{p.user.name}</span>{' '}
+                          <span className="text-xs">({p.user.email})</span>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-medium text-foreground">{p.due.title}</span>
