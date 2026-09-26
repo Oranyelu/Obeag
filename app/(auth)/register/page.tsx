@@ -107,8 +107,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (profilePicFile.size > 1024 * 1024 || birthCertFile.size > 1024 * 1024) {
-      setError('Each uploaded file must be under 1MB.');
+    if (profilePicFile.size > 5 * 1024 * 1024 || birthCertFile.size > 5 * 1024 * 1024) {
+      setError('Each uploaded file must be under 5MB.');
       setIsLoading(false);
       return;
     }
@@ -328,7 +328,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                  Profile Picture * (Max 1MB)
+                  Profile Picture * (Max 5MB)
                 </label>
                 <input
                   type="file"
@@ -336,8 +336,8 @@ export default function RegisterPage() {
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
-                    if (file && file.size > 1024 * 1024) {
-                      setError('Profile picture exceeds 1MB limit.');
+                    if (file && file.size > 5 * 1024 * 1024) {
+                      setError('Profile picture exceeds 5MB limit.');
                       setProfilePicFile(null);
                       e.target.value = '';
                     } else {
@@ -351,7 +351,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                  Birth Certificate * (Max 1MB)
+                  Birth Certificate * (Max 5MB)
                 </label>
                 <input
                   type="file"
@@ -359,8 +359,8 @@ export default function RegisterPage() {
                   accept="image/*,application/pdf"
                   onChange={(e) => {
                     const file = e.target.files?.[0] || null;
-                    if (file && file.size > 1024 * 1024) {
-                      setError('Birth certificate exceeds 1MB limit.');
+                    if (file && file.size > 5 * 1024 * 1024) {
+                      setError('Birth certificate exceeds 5MB limit.');
                       setBirthCertFile(null);
                       e.target.value = '';
                     } else {

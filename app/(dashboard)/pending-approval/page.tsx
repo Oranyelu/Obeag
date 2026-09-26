@@ -133,9 +133,9 @@ export default function PendingApprovalPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Strict 1MB limit check
-    if (file.size > 1024 * 1024) {
-      setFormError('File exceeds the 1MB size limit.');
+    // Strict 5MB limit check
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('File exceeds the 5MB size limit.');
       return;
     }
 
@@ -312,7 +312,7 @@ export default function PendingApprovalPage() {
                       onChange={(e) => handleFileUpload(e, 'pic')}
                       className="block w-full text-xs text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90 file:cursor-pointer"
                     />
-                    <p className="text-[10px] text-muted-foreground">Accepts JPEG/PNG up to 1MB.</p>
+                    <p className="text-[10px] text-muted-foreground">Accepts JPEG/PNG up to 5MB.</p>
                   </div>
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function PendingApprovalPage() {
                     onChange={(e) => handleFileUpload(e, 'cert')}
                     className="block w-full text-xs text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90 file:cursor-pointer"
                   />
-                  <p className="text-[10px] text-muted-foreground">Upload a clear image or PDF of your birth certificate (Max 1MB).</p>
+                  <p className="text-[10px] text-muted-foreground">Upload a clear image or PDF of your birth certificate (Max 5MB).</p>
                 </div>
               </div>
             )}

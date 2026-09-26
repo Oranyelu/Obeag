@@ -9,9 +9,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Strict 1MB size limit (1,048,576 bytes)
-    if (file.size > 1024 * 1024) {
-      return NextResponse.json({ error: 'File exceeds the 1MB size limit' }, { status: 400 });
+    // Strict 5MB size limit (5,242,880 bytes)
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File exceeds the 5MB size limit' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
