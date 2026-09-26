@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { printUnactivatedUsersPdf, downloadUnactivatedUsersPdf } from '@/app/lib/unactivatedUsersPdf';
 
 interface FinancialDuePaid {
@@ -94,6 +93,15 @@ export default function UserManagementPage() {
     amount: '',
   });
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+
+  // Lightbox preview modal state
+  const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);
+
+  const hasRealProfilePic = (url?: string | null): boolean => {
+    if (!url) return false;
+    if (url.includes('placeholder')) return false;
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/uploads');
+  };
 
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
@@ -711,13 +719,31 @@ export default function UserManagementPage() {
                   {pendingUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden border border-border bg-muted">
-                          {u.profilePicture ? (
-                            <Image src={u.profilePicture} alt={u.name} fill className="object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground">{u.name[0]}</div>
-                          )}
-                        </div>
+                        {hasRealProfilePic(u.profilePicture) ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Profile Photo` })}
+                            className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary/40 hover:border-primary shadow-sm hover:scale-105 transition-all group block cursor-pointer"
+                            title="Click to inspect photo"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={u.profilePicture}
+                              alt={u.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
+                              🔍
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="w-12 h-12 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground">
+                            {u.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-foreground">{u.name}</div>
@@ -730,15 +756,32 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                         {new Date(u.dob).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs space-y-1">
-                        <a
-                          href={u.birthCert}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block text-primary hover:underline font-semibold"
-                        >
-                          📄 Birth Certificate
-                        </a>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs space-y-1.5">
+                        {hasRealProfilePic(u.profilePicture) ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Profile Photo` })}
+                            className="flex items-center gap-1.5 text-primary hover:underline font-semibold cursor-pointer text-left"
+                          >
+                            <span>📷</span>
+                            <span>View Profile Photo</span>
+                          </button>
+                        ) : (
+                          <span className="text-muted-foreground italic flex items-center gap-1">
+                            <span>📷</span> No Photo Uploaded
+                          </span>
+                        )}
+                        {u.birthCert && (
+                          <a
+                            href={u.birthCert}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
+                          >
+                            <span>📄</span>
+                            <span>Birth Certificate</span>
+                          </a>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                         <div className="flex justify-center gap-2">
@@ -820,13 +863,31 @@ export default function UserManagementPage() {
                   {approvedUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border bg-muted">
-                          {u.profilePicture ? (
-                            <Image src={u.profilePicture} alt={u.name} fill className="object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground">{u.name[0]}</div>
-                          )}
-                        </div>
+                        {hasRealProfilePic(u.profilePicture) ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Profile Photo` })}
+                            className="relative w-10 h-10 rounded-full overflow-hidden border border-border hover:border-primary shadow-sm hover:scale-105 transition-all group block cursor-pointer"
+                            title="Click to view full photo"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={u.profilePicture}
+                              alt={u.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
+                              🔍
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-sm">
+                            {u.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-foreground">{u.name}</div>
@@ -876,13 +937,31 @@ export default function UserManagementPage() {
                   {flaggedUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border bg-muted">
-                          {u.profilePicture ? (
-                            <Image src={u.profilePicture} alt={u.name} fill className="object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-bold text-muted-foreground">{u.name[0]}</div>
-                          )}
-                        </div>
+                        {hasRealProfilePic(u.profilePicture) ? (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Profile Photo` })}
+                            className="relative w-10 h-10 rounded-full overflow-hidden border border-border hover:border-primary shadow-sm hover:scale-105 transition-all group block cursor-pointer"
+                            title="Click to view full photo"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={u.profilePicture}
+                              alt={u.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
+                              🔍
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-sm">
+                            {u.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-foreground">{u.name}</div>
@@ -1015,20 +1094,29 @@ export default function UserManagementPage() {
               
               {/* Profile Header Block */}
               <div className="flex flex-col md:flex-row gap-6 items-start pb-6 border-b border-border">
-                <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary bg-muted shrink-0 mx-auto md:mx-0">
-                  {selectedUser.profilePicture ? (
-                    <Image
+                {hasRealProfilePic(selectedUser.profilePicture) ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImage({ src: selectedUser.profilePicture, title: `${selectedUser.name} - Profile Photo` })}
+                    className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-primary bg-muted shrink-0 mx-auto md:mx-0 group shadow-md cursor-pointer hover:ring-4 hover:ring-primary/20 transition-all block"
+                    title="Click to inspect profile photo"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={selectedUser.profilePicture}
                       alt={selectedUser.name}
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-3xl text-muted-foreground bg-muted">
-                      {selectedUser.name[0]}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-semibold">
+                      <span>🔍</span>
+                      <span>Enlarge</span>
                     </div>
-                  )}
-                </div>
+                  </button>
+                ) : (
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border bg-muted shrink-0 mx-auto md:mx-0 flex items-center justify-center font-bold text-3xl text-muted-foreground">
+                    {selectedUser.name[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
                 
                 <div className="space-y-2 text-center md:text-left flex-1 w-full">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 justify-between">
@@ -1072,24 +1160,103 @@ export default function UserManagementPage() {
                 </div>
               </div>
 
-              {/* Document Link */}
+              {/* Verification Documents Block */}
               {selectedUser.status !== 'NOT_ACTIVATED' && (
-                <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">📄</span>
-                    <div>
-                      <h4 className="text-sm font-bold text-foreground">Birth Certificate</h4>
-                      <p className="text-xs text-muted-foreground">Official proof of age document submitted during signup.</p>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-foreground uppercase tracking-wider text-muted-foreground">
+                    Verification Documents
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Profile Photo Card */}
+                    <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {hasRealProfilePic(selectedUser.profilePicture) ? (
+                          <div 
+                            className="w-12 h-12 rounded-lg overflow-hidden border border-border shrink-0 cursor-pointer bg-muted"
+                            onClick={() => setPreviewImage({ src: selectedUser.profilePicture, title: `${selectedUser.name} - Profile Photo` })}
+                            title="Click to preview"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={selectedUser.profilePicture}
+                              alt="Profile Preview"
+                              className="w-full h-full object-cover hover:scale-110 transition-transform"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-2xl">
+                            📷
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-foreground truncate">Passport / Profile Photo</h4>
+                          <p className="text-xs text-muted-foreground">Official applicant facial photograph.</p>
+                        </div>
+                      </div>
+                      {hasRealProfilePic(selectedUser.profilePicture) ? (
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: selectedUser.profilePicture, title: `${selectedUser.name} - Profile Photo` })}
+                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                          >
+                            Inspect 🔍
+                          </button>
+                          <a
+                            href={selectedUser.profilePicture}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-primary hover:opacity-90 text-primary-foreground px-3 py-2 rounded-lg text-xs font-semibold transition"
+                          >
+                            Full ↗
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic shrink-0">No Photo</span>
+                      )}
+                    </div>
+
+                    {/* Birth Certificate Card */}
+                    <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-2xl shrink-0">📄</span>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-foreground truncate">Birth Certificate</h4>
+                          <p className="text-xs text-muted-foreground">Proof of age / baptismal record.</p>
+                        </div>
+                      </div>
+                      {selectedUser.birthCert && !selectedUser.birthCert.includes('placeholder') ? (
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImage({ src: selectedUser.birthCert, title: `${selectedUser.name} - Birth Certificate` })}
+                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                          >
+                            Preview 🔍
+                          </button>
+                          <a
+                            href={selectedUser.birthCert}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-primary hover:opacity-90 text-primary-foreground px-3 py-2 rounded-lg text-xs font-semibold transition"
+                          >
+                            Open ↗
+                          </a>
+                        </div>
+                      ) : selectedUser.birthCert ? (
+                        <a
+                          href={selectedUser.birthCert}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-primary hover:opacity-90 text-primary-foreground px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0"
+                        >
+                          Open Document
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic shrink-0">None</span>
+                      )}
                     </div>
                   </div>
-                  <a
-                    href={selectedUser.birthCert}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 rounded-lg text-xs font-semibold transition"
-                  >
-                    Open Document
-                  </a>
                 </div>
               )}
 
@@ -1454,6 +1621,58 @@ export default function UserManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Full-size Image Inspection Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div 
+            className="bg-card max-w-3xl w-full max-h-[90vh] rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/40">
+              <h3 className="text-base font-bold text-foreground truncate">{previewImage.title}</h3>
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewImage.src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                >
+                  Open in New Tab ↗
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage(null)}
+                  className="text-muted-foreground hover:text-foreground text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="p-6 flex-1 flex items-center justify-center bg-black/30 overflow-auto min-h-[320px] max-h-[75vh]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewImage.src}
+                alt={previewImage.title}
+                className="max-h-[70vh] max-w-full w-auto object-contain rounded-lg shadow-xl border border-border/50"
+              />
+            </div>
+            <div className="px-6 py-3 border-t border-border bg-muted/20 flex justify-between items-center text-xs text-muted-foreground">
+              <span>Click outside or press ✕ to close</span>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="bg-secondary text-secondary-foreground px-4 py-1.5 rounded-lg font-semibold hover:opacity-90 transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
