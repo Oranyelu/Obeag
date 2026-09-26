@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { printUnactivatedUsersPdf, downloadUnactivatedUsersPdf } from '@/app/lib/unactivatedUsersPdf';
 
 interface FinancialDuePaid {
   paymentId: string;
@@ -65,6 +66,7 @@ export default function UserManagementPage() {
   const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected' | 'flagged'>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [codeSearchQuery, setCodeSearchQuery] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
   
   // Detail Modal state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -399,6 +401,38 @@ export default function UserManagementPage() {
     return matchesAssignedName || matchesUsedByName || matchesCode;
   });
 
+  const unactivatedUsers = codes.filter((c) => !c.isUsed);
+
+  const handlePrintUnactivatedUsers = (action: 'print' | 'download' = 'print', forceAll = false) => {
+    let targetUsers = unactivatedUsers;
+    if (!forceAll && activeTab === 'codes' && codeSearchQuery.trim()) {
+      targetUsers = filteredCodes.filter((c) => !c.isUsed);
+    }
+
+    if (targetUsers.length === 0) {
+      alert(
+        !forceAll && activeTab === 'codes' && codeSearchQuery.trim()
+          ? 'No matching unactivated users found for your search.'
+          : 'There are currently no unactivated users to print.'
+      );
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      if (action === 'download') {
+        downloadUnactivatedUsersPdf(targetUsers);
+      } else {
+        printUnactivatedUsersPdf(targetUsers);
+      }
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('An error occurred while generating the PDF.');
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       
@@ -428,23 +462,54 @@ export default function UserManagementPage() {
         </form>
       </div>
 
-      {/* Bulk Transaction Actions */}
-      <div className="flex flex-wrap items-center gap-3 bg-muted/20 p-4 rounded-xl border border-border/60">
-        <div className="text-sm font-semibold text-foreground flex items-center mr-2">
-          <span>👛</span> &nbsp; Bulk Financial Operations:
+      {/* Action Bar: Bulk Operations & Print Users */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/20 p-4 rounded-xl border border-border/60">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-sm font-semibold text-foreground flex items-center mr-2">
+            <span>👛</span> &nbsp; Bulk Financial Operations:
+          </div>
+          <button
+            onClick={() => setBulkModal({ isOpen: true, type: 'DEPOSIT', selectedUserId: '', amount: '' })}
+            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+          >
+            Pay Bulk Dues (Deposit)
+          </button>
+          <button
+            onClick={() => setBulkModal({ isOpen: true, type: 'WITHDRAW', selectedUserId: '', amount: '' })}
+            className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+          >
+            Deduct / Withdraw Bulk
+          </button>
         </div>
-        <button
-          onClick={() => setBulkModal({ isOpen: true, type: 'DEPOSIT', selectedUserId: '', amount: '' })}
-          className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
-        >
-          Pay Bulk Dues (Deposit)
-        </button>
-        <button
-          onClick={() => setBulkModal({ isOpen: true, type: 'WITHDRAW', selectedUserId: '', amount: '' })}
-          className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
-        >
-          Deduct / Withdraw Bulk
-        </button>
+
+        {/* Print Unactivated Users Action */}
+        <div className="flex items-center gap-2">
+          <div className="relative inline-flex rounded-lg shadow-sm">
+            <button
+              type="button"
+              onClick={() => handlePrintUnactivatedUsers('print', true)}
+              disabled={isPrinting || unactivatedUsers.length === 0}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-l-lg hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
+              title="Print PDF with unactivated user names and registration codes"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>{isPrinting ? 'Preparing PDF...' : `Print Users (${unactivatedUsers.length})`}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePrintUnactivatedUsers('download', true)}
+              disabled={isPrinting || unactivatedUsers.length === 0}
+              className="inline-flex items-center px-2.5 py-2 bg-primary/90 text-primary-foreground text-xs font-bold rounded-r-lg border-l border-primary-foreground/20 hover:bg-primary transition disabled:opacity-50 cursor-pointer"
+              title="Download PDF directly"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -465,6 +530,11 @@ export default function UserManagementPage() {
           className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === 'codes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Registration Codes
+          {unactivatedUsers.length > 0 && (
+            <span className="ml-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-bold">
+              {unactivatedUsers.length} Unactivated
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('approved')}
@@ -508,23 +578,57 @@ export default function UserManagementPage() {
           {/* 1. CODES TAB */}
           {activeTab === 'codes' && (
             <div className="space-y-4 p-6">
-              <div className="max-w-md relative">
-                <input
-                  type="text"
-                  placeholder="Search code, assigned name, or user..."
-                  value={codeSearchQuery}
-                  onChange={(e) => setCodeSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 pl-10 border border-input bg-background text-foreground rounded-lg focus:ring-1 focus:ring-primary focus:outline-none text-sm"
-                />
-                <span className="absolute left-3 top-3 text-muted-foreground text-sm">🔍</span>
-                {codeSearchQuery && (
-                  <button
-                    onClick={() => setCodeSearchQuery('')}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                )}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="max-w-md relative w-full">
+                  <input
+                    type="text"
+                    placeholder="Search code, assigned name, or user..."
+                    value={codeSearchQuery}
+                    onChange={(e) => setCodeSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2.5 pl-10 border border-input bg-background text-foreground rounded-lg focus:ring-1 focus:ring-primary focus:outline-none text-sm"
+                  />
+                  <span className="absolute left-3 top-3 text-muted-foreground text-sm">🔍</span>
+                  {codeSearchQuery && (
+                    <button
+                      onClick={() => setCodeSearchQuery('')}
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground text-xs font-semibold cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative inline-flex rounded-lg shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => handlePrintUnactivatedUsers('print', false)}
+                      disabled={isPrinting || unactivatedUsers.length === 0}
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-xs font-bold px-3.5 py-2 rounded-l-lg hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
+                      title="Print PDF with unactivated user names and registration codes"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      <span>
+                        {codeSearchQuery.trim()
+                          ? `Print Matching (${filteredCodes.filter((c) => !c.isUsed).length})`
+                          : `Print Users (${unactivatedUsers.length})`}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePrintUnactivatedUsers('download', false)}
+                      disabled={isPrinting || unactivatedUsers.length === 0}
+                      className="inline-flex items-center px-2.5 py-2 bg-primary/90 text-primary-foreground text-xs font-bold rounded-r-lg border-l border-primary-foreground/20 hover:bg-primary transition disabled:opacity-50 cursor-pointer"
+                      title="Download PDF directly"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="overflow-x-auto border border-border/60 rounded-lg">
