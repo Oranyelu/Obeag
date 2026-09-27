@@ -33,6 +33,10 @@ interface User {
   birthCert: string;
   flaggedReason?: string | null;
   flaggedAt?: string | null;
+  pendingProfilePicture?: string | null;
+  pendingBirthCert?: string | null;
+  pendingMediaStatus?: string | null;
+  pendingMediaSubmittedAt?: string | null;
   createdAt: string;
   financials: {
     walletBalance: number;
@@ -70,10 +74,24 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [newCodeName, setNewCodeName] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected' | 'flagged'>('pending');
+  const [activeTab, setActiveTab] = useState<'codes' | 'pending' | 'approved' | 'rejected' | 'flagged' | 'document-updates'>('pending');
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [codeSearchQuery, setCodeSearchQuery] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
+
+  // Document update approval state
+  const [actioningMediaId, setActioningMediaId] = useState<string | null>(null);
+  const [declineMediaModal, setDeclineMediaModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+    feedback: string;
+  }>({
+    isOpen: false,
+    userId: '',
+    userName: '',
+    feedback: '',
+  });
   
   // Detail Modal state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -408,6 +426,31 @@ export default function UserManagementPage() {
   const approvedUsers = users.filter(u => u.status === 'APPROVED');
   const rejectedUsers = users.filter(u => u.status === 'REJECTED');
   const flaggedUsers = users.filter(u => u.status === 'FLAGGED');
+  const mediaPendingUsers = users.filter(u => u.pendingMediaStatus === 'PENDING');
+
+  const handleMediaAction = async (userId: string, action: 'APPROVE' | 'REJECT', feedback?: string) => {
+    setActioningMediaId(userId);
+    try {
+      const res = await fetch('/api/admin/users/media-approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action, feedback }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || (action === 'APPROVE' ? 'Document update approved.' : 'Document update declined.'));
+        setDeclineMediaModal({ isOpen: false, userId: '', userName: '', feedback: '' });
+        fetchData();
+      } else {
+        alert(data.error || 'Failed to process document approval action.');
+      }
+    } catch (err) {
+      console.error('Media action error:', err);
+      alert('An error occurred while processing the request.');
+    } finally {
+      setActioningMediaId(null);
+    }
+  };
 
   const filteredCodes = codes.filter((c) => {
     const searchLower = codeSearchQuery.toLowerCase();
@@ -532,12 +575,23 @@ export default function UserManagementPage() {
       <div className="flex border-b border-border space-x-4">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Pending Approvals ({pendingUsers.length})
           {pendingUsers.length > 0 && (
             <span className="ml-1.5 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
               {pendingUsers.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('document-updates')}
+          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap ${activeTab === 'document-updates' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          Document Updates ({mediaPendingUsers.length})
+          {mediaPendingUsers.length > 0 && (
+            <span className="ml-1.5 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
+              {mediaPendingUsers.length}
             </span>
           )}
         </button>
@@ -920,6 +974,263 @@ export default function UserManagementPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* 2b. DOCUMENT UPDATES TAB */}
+          {activeTab === 'document-updates' && (
+            <div className="p-6 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/60">
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">Requested Document Updates</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Review and verify updated profile pictures and birth certificates submitted by active members.
+                    Approving replaces the existing documents and removes old files from storage.
+                  </p>
+                </div>
+                <span className="text-xs font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full shrink-0">
+                  {mediaPendingUsers.length} Pending Review
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                {mediaPendingUsers.map((u) => (
+                  <div key={u.id} className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-5 hover:border-primary/40 transition-colors">
+                    {/* User Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/60">
+                      <div className="flex items-center gap-3">
+                        {hasRealProfilePic(u.profilePicture) ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-border bg-muted shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={u.profilePicture} alt={u.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-full border border-border bg-muted flex items-center justify-center font-bold text-muted-foreground text-sm shrink-0">
+                            {u.name[0]?.toUpperCase() || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-bold text-foreground text-sm flex items-center gap-2">
+                            <span>{u.name}</span>
+                            <span className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 font-semibold px-2 py-0.5 rounded-full">
+                              Active Member
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">{u.email} • {u.phone} • {u.community}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {u.pendingMediaSubmittedAt && (
+                          <span className="text-xs text-muted-foreground">
+                            Submitted: {new Date(u.pendingMediaSubmittedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Comparison Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Profile Picture Comparison Card */}
+                      <div className="bg-muted/20 border border-border/80 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <span>📷</span> Profile Photo
+                          </h4>
+                          {u.pendingProfilePicture ? (
+                            <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                              Update Requested
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-muted-foreground">Unchanged</span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-1">
+                          {/* Current Photo */}
+                          <div className="space-y-1.5">
+                            <span className="block text-[11px] font-semibold text-muted-foreground">Current Active Photo</span>
+                            {hasRealProfilePic(u.profilePicture) ? (
+                              <div className="relative group">
+                                <div className="w-full h-32 rounded-lg overflow-hidden border border-border bg-muted/50">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={u.profilePicture} alt="Current" className="w-full h-full object-cover" />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Current Profile Photo` })}
+                                  className="mt-1.5 w-full text-center text-xs text-primary hover:underline font-semibold cursor-pointer"
+                                >
+                                  Inspect 🔍
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="w-full h-32 rounded-lg border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground italic">
+                                No Photo
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Proposed New Photo */}
+                          <div className="space-y-1.5">
+                            <span className="block text-[11px] font-semibold text-blue-600 dark:text-blue-400">Proposed New Photo</span>
+                            {u.pendingProfilePicture ? (
+                              <div className="relative group">
+                                <div className="w-full h-32 rounded-lg overflow-hidden border-2 border-blue-500 bg-muted/50 shadow-sm">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={u.pendingProfilePicture} alt="Proposed" className="w-full h-full object-cover" />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage({ src: u.pendingProfilePicture!, title: `${u.name} - Proposed New Profile Photo` })}
+                                  className="mt-1.5 w-full text-center text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                                >
+                                  Inspect New 🔍
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="w-full h-32 rounded-lg border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground italic bg-muted/10">
+                                None Submitted
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Birth Certificate Comparison Card */}
+                      <div className="bg-muted/20 border border-border/80 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                            <span>📄</span> Birth Certificate
+                          </h4>
+                          {u.pendingBirthCert ? (
+                            <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
+                              Update Requested
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-muted-foreground">Unchanged</span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 pt-1">
+                          {/* Current Birth Cert */}
+                          <div className="space-y-1.5">
+                            <span className="block text-[11px] font-semibold text-muted-foreground">Current Document</span>
+                            {u.birthCert && !u.birthCert.includes('placeholder') ? (
+                              <div className="space-y-2">
+                                <div 
+                                  onClick={() => setPreviewImage({ src: u.birthCert, title: `${u.name} - Current Birth Certificate` })}
+                                  className="w-full h-32 rounded-lg border border-border bg-muted/50 overflow-hidden cursor-pointer flex items-center justify-center p-2 group"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={u.birthCert} alt="Current Birth Cert" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                </div>
+                                <div className="flex justify-between text-xs font-semibold">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewImage({ src: u.birthCert, title: `${u.name} - Current Birth Certificate` })}
+                                    className="text-primary hover:underline cursor-pointer"
+                                  >
+                                    Preview 🔍
+                                  </button>
+                                  <a href={u.birthCert} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                    Open ↗
+                                  </a>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-full h-32 rounded-lg border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground italic">
+                                No Document
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Proposed New Birth Cert */}
+                          <div className="space-y-1.5">
+                            <span className="block text-[11px] font-semibold text-blue-600 dark:text-blue-400">Proposed Document</span>
+                            {u.pendingBirthCert ? (
+                              <div className="space-y-2">
+                                <div 
+                                  onClick={() => setPreviewImage({ src: u.pendingBirthCert!, title: `${u.name} - Proposed Birth Certificate` })}
+                                  className="w-full h-32 rounded-lg border-2 border-blue-500 bg-muted/50 overflow-hidden cursor-pointer flex items-center justify-center p-2 group shadow-sm"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={u.pendingBirthCert} alt="Proposed Birth Cert" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform" />
+                                </div>
+                                <div className="flex justify-between text-xs font-semibold">
+                                  <button
+                                    type="button"
+                                    onClick={() => setPreviewImage({ src: u.pendingBirthCert!, title: `${u.name} - Proposed Birth Certificate` })}
+                                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                  >
+                                    Preview New 🔍
+                                  </button>
+                                  <a href={u.pendingBirthCert} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                                    Open ↗
+                                  </a>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-full h-32 rounded-lg border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground italic bg-muted/10">
+                                None Submitted
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions Row */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/60 bg-muted/10 -mx-5 -mb-5 p-4 rounded-b-xl">
+                      <button
+                        type="button"
+                        onClick={() => handleViewDetails(u)}
+                        className="text-xs text-muted-foreground hover:text-foreground font-semibold cursor-pointer"
+                      >
+                        View Full Profile & Ledger ↗
+                      </button>
+
+                      <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <button
+                          type="button"
+                          disabled={actioningMediaId === u.id}
+                          onClick={() => setDeclineMediaModal({
+                            isOpen: true,
+                            userId: u.id,
+                            userName: u.name,
+                            feedback: '',
+                          })}
+                          className="bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                        >
+                          Decline Update
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actioningMediaId === u.id}
+                          onClick={() => {
+                            if (window.confirm(`Approve document update for ${u.name}? This will replace the active profile picture/birth certificate and permanently delete the old files from storage.`)) {
+                              handleMediaAction(u.id, 'APPROVE');
+                            }
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer shadow-sm"
+                        >
+                          {actioningMediaId === u.id ? 'Processing...' : 'Approve & Replace Storage Files'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {mediaPendingUsers.length === 0 && (
+                  <div className="py-16 text-center space-y-3">
+                    <span className="text-4xl block">🖼️</span>
+                    <h4 className="text-base font-bold text-foreground">No Document Updates Pending Review</h4>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                      When active members request to change their profile picture or birth certificate, their submission will appear here for comparison and administrative approval before replacing files in storage.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1381,6 +1692,90 @@ export default function UserManagementPage() {
                 </div>
               )}
 
+              {/* Pending Document Update Banner if user has submitted updates */}
+              {selectedUser.pendingMediaStatus === 'PENDING' && (
+                <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-xl p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-500/20 pb-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                        <span>⏳</span> Pending Document Update Under Review
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Submitted: {selectedUser.pendingMediaSubmittedAt ? new Date(selectedUser.pendingMediaSubmittedAt).toLocaleString() : 'Recently'}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeclineMediaModal({
+                          isOpen: true,
+                          userId: selectedUser.id,
+                          userName: selectedUser.name,
+                          feedback: '',
+                        })}
+                        className="bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      >
+                        Decline Update
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Approve document update for ${selectedUser.name}? Old files will be replaced in storage.`)) {
+                            handleMediaAction(selectedUser.id, 'APPROVE');
+                          }
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
+                      >
+                        Approve Update
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    {selectedUser.pendingProfilePicture && (
+                      <div className="bg-card/70 border border-blue-500/20 p-3 rounded-lg flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden border border-blue-500 bg-muted shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={selectedUser.pendingProfilePicture} alt="New Profile" className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-foreground block">New Profile Picture</span>
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Awaiting Approval</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ src: selectedUser.pendingProfilePicture!, title: `${selectedUser.name} - Proposed New Profile Photo` })}
+                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer"
+                        >
+                          Inspect 🔍
+                        </button>
+                      </div>
+                    )}
+
+                    {selectedUser.pendingBirthCert && (
+                      <div className="bg-card/70 border border-blue-500/20 p-3 rounded-lg flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-2xl">📄</span>
+                          <div>
+                            <span className="font-bold text-foreground block">New Birth Certificate</span>
+                            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Awaiting Approval</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ src: selectedUser.pendingBirthCert!, title: `${selectedUser.name} - Proposed Birth Certificate` })}
+                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer"
+                        >
+                          Inspect 🔍
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Financial Section */}
               {selectedUser.financials && (
                 <div className="space-y-4">
@@ -1742,6 +2137,65 @@ export default function UserManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Decline Document Update Feedback Modal */}
+      {declineMediaModal.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/40">
+              <h2 className="text-lg font-bold text-foreground">
+                Decline Document Update
+              </h2>
+              <button
+                onClick={() => setDeclineMediaModal({ isOpen: false, userId: '', userName: '', feedback: '' })}
+                className="text-muted-foreground hover:text-foreground text-xl font-semibold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-foreground">
+                You are declining the proposed document update for <strong className="font-semibold">{declineMediaModal.userName}</strong>.
+              </p>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-800 dark:text-amber-300">
+                The newly uploaded file(s) will be safely deleted from storage. The member's current active profile picture and birth certificate will remain untouched.
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase">
+                  Reason / Feedback for Member (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g., Image is blurry, or document does not match account name."
+                  value={declineMediaModal.feedback}
+                  onChange={(e) => setDeclineMediaModal(prev => ({ ...prev, feedback: e.target.value }))}
+                  className="w-full rounded-lg border border-input bg-background text-foreground text-sm p-3 focus:ring-1 focus:ring-primary focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeclineMediaModal({ isOpen: false, userId: '', userName: '', feedback: '' })}
+                className="bg-secondary text-foreground hover:bg-muted border border-border px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={actioningMediaId !== null}
+                onClick={() => handleMediaAction(declineMediaModal.userId, 'REJECT', declineMediaModal.feedback)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+              >
+                {actioningMediaId ? 'Declining...' : 'Confirm Decline'}
+              </button>
+            </div>
           </div>
         </div>
       )}

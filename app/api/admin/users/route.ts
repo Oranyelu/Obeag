@@ -52,6 +52,10 @@ export async function GET() {
         birthCert: user.birthCert,
         flaggedReason: user.flaggedReason,
         flaggedAt: user.flaggedAt ? user.flaggedAt.toISOString() : null,
+        pendingProfilePicture: user.pendingProfilePicture,
+        pendingBirthCert: user.pendingBirthCert,
+        pendingMediaStatus: user.pendingMediaStatus,
+        pendingMediaSubmittedAt: user.pendingMediaSubmittedAt ? user.pendingMediaSubmittedAt.toISOString() : null,
         createdAt: user.createdAt.toISOString(),
         financials: {
           walletBalance: user.walletBalance,

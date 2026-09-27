@@ -25,6 +25,10 @@ export async function GET() {
         profilePicture: true,
         birthCert: true,
         flaggedReason: true,
+        pendingProfilePicture: true,
+        pendingBirthCert: true,
+        pendingMediaStatus: true,
+        pendingMediaSubmittedAt: true,
       },
     });
 

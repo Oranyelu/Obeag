@@ -49,8 +49,17 @@ interface DashboardData {
 }
 
 interface UserProfile {
+  id?: string;
+  name?: string;
+  email?: string;
   googleId: string | null;
   profilePicture: string;
+  birthCert?: string;
+  status?: string;
+  pendingProfilePicture?: string | null;
+  pendingBirthCert?: string | null;
+  pendingMediaStatus?: string | null;
+  pendingMediaSubmittedAt?: string | null;
 }
 
 export default function DashboardPage() {
@@ -71,6 +80,15 @@ export default function DashboardPage() {
     dueIds: [],
     totalAmount: 0,
   });
+
+  // Member Document Update state
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [newProfilePic, setNewProfilePic] = useState<string>('');
+  const [newBirthCert, setNewBirthCert] = useState<string>('');
+  const [isUploadingDoc, setIsUploadingDoc] = useState<'pic' | 'cert' | null>(null);
+  const [isSubmittingDocs, setIsSubmittingDocs] = useState(false);
+  const [docError, setDocError] = useState('');
+  const [docSuccess, setDocSuccess] = useState('');
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -204,6 +222,87 @@ export default function DashboardPage() {
       alert('An error occurred.');
     } finally {
       setIsPaying(false);
+    }
+  };
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'pic' | 'cert') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setDocError('File exceeds the 5MB size limit.');
+      return;
+    }
+
+    setIsUploadingDoc(field);
+    setDocError('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        if (field === 'pic') {
+          setNewProfilePic(data.url);
+        } else {
+          setNewBirthCert(data.url);
+        }
+      } else {
+        setDocError(data.error || 'Failed to upload file.');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      setDocError('An error occurred during upload.');
+    } finally {
+      setIsUploadingDoc(null);
+    }
+  };
+
+  const submitDocumentUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProfilePic && !newBirthCert) {
+      setDocError('Please choose at least a new profile picture or a new birth certificate to update.');
+      return;
+    }
+
+    setIsSubmittingDocs(true);
+    setDocError('');
+    setDocSuccess('');
+
+    try {
+      const res = await fetch('/api/user/update-documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profilePicture: newProfilePic || undefined,
+          birthCert: newBirthCert || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setDocSuccess('Document update submitted! It is now pending administrative approval.');
+        setNewProfilePic('');
+        setNewBirthCert('');
+        fetchProfileData();
+        setTimeout(() => {
+          setIsDocModalOpen(false);
+          setDocSuccess('');
+        }, 2200);
+      } else {
+        setDocError(data.error || 'Failed to submit document update.');
+      }
+    } catch (err) {
+      console.error('Submit document error:', err);
+      setDocError('An error occurred while submitting documents.');
+    } finally {
+      setIsSubmittingDocs(false);
     }
   };
 
@@ -342,9 +441,29 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-primary">Welcome, {session?.user?.name || 'Member'}</h1>
             <p className="text-muted-foreground text-sm">Manage your dues payments and receive group updates.</p>
+            {profile?.pendingMediaStatus === 'PENDING' && (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Document Update Pending Admin Approval</span>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setNewProfilePic('');
+              setNewBirthCert('');
+              setDocError('');
+              setDocSuccess('');
+              setIsDocModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 bg-secondary hover:bg-muted text-foreground px-4 py-2 rounded-lg border border-border text-sm font-semibold transition shadow-sm cursor-pointer"
+          >
+            <span>📷</span>
+            <span>Update Documents</span>
+          </button>
           {profile && !profile.googleId && (
             <div className="flex flex-col items-start gap-1 p-2 bg-muted/40 rounded-lg border border-border">
               <span className="text-[10px] text-muted-foreground font-semibold uppercase">Link Google Login</span>
@@ -810,6 +929,246 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Member Document Update Modal */}
+      {isDocModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => !isSubmittingDocs && setIsDocModalOpen(false)}
+          ></div>
+          
+          <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-2xl w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <span>📸</span> Update Member Documents
+                </h3>
+                <p className="text-muted-foreground text-xs leading-relaxed mt-1">
+                  Upload a new profile picture and/or birth certificate. These updates require administrative review before replacing your active documents in storage.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDocModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-lg font-bold p-1 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {profile?.pendingMediaStatus === 'PENDING' && (
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                <span className="text-lg">⏳</span>
+                <div>
+                  <span className="font-bold">Pending Approval: </span>
+                  You currently have a document update awaiting admin review (submitted on {profile.pendingMediaSubmittedAt ? new Date(profile.pendingMediaSubmittedAt).toLocaleDateString() : 'recently'}). Submitting new files below will update your pending request.
+                </div>
+              </div>
+            )}
+
+            {docError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-xl font-semibold">
+                {docError}
+              </div>
+            )}
+
+            {docSuccess && (
+              <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 text-xs rounded-xl font-semibold flex items-center gap-2">
+                <span>✅</span>
+                <span>{docSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={submitDocumentUpdate} className="space-y-6">
+              {/* Profile Picture Section */}
+              <div className="bg-muted/30 border border-border p-4 rounded-xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <span>👤</span> Profile Picture
+                  </h4>
+                  <span className="text-[11px] text-muted-foreground">Max 5MB (JPG, PNG)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  {/* Current Active Picture */}
+                  <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                    {profile?.profilePicture ? (
+                      <div className="relative w-14 h-14 rounded-full overflow-hidden border border-border shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={profile.profilePicture} alt="Current" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-muted border border-border flex items-center justify-center font-bold text-muted-foreground shrink-0">
+                        ?
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-xs font-bold text-foreground block">Current Active Photo</span>
+                      <span className="text-[10px] text-muted-foreground">Active in system</span>
+                    </div>
+                  </div>
+
+                  {/* New Picture Preview / Upload */}
+                  <div className="flex flex-col gap-2">
+                    {newProfilePic ? (
+                      <div className="flex items-center gap-3 p-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-green-500 shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={newProfilePic} alt="New Preview" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold text-green-700 dark:text-green-300 block truncate">New Photo Ready</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewProfilePic('')}
+                            className="text-[10px] text-red-500 hover:underline font-semibold cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : profile?.pendingProfilePicture ? (
+                      <div className="flex items-center gap-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-amber-500 shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={profile.pendingProfilePicture} alt="Pending Preview" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-300 block truncate">Awaiting Admin</span>
+                          <span className="text-[10px] text-muted-foreground">Currently pending review</span>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <label className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold cursor-pointer transition text-foreground">
+                      <span>{isUploadingDoc === 'pic' ? 'Uploading...' : '📁 Choose New Photo'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingDoc !== null || isSubmittingDocs}
+                        onChange={(e) => handleDocUpload(e, 'pic')}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Birth Certificate Section */}
+              <div className="bg-muted/30 border border-border p-4 rounded-xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <span>📄</span> Birth Certificate / Age Declaration
+                  </h4>
+                  <span className="text-[11px] text-muted-foreground">Max 5MB (JPG, PNG, PDF)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  {/* Current Active Certificate */}
+                  <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+                    {profile?.birthCert && !profile.birthCert.includes('placeholder') ? (
+                      <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-border shrink-0 bg-muted flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={profile.birthCert} alt="Current Cert" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg bg-muted border border-border flex items-center justify-center font-bold text-muted-foreground shrink-0 text-xl">
+                        📄
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-foreground block">Current Active Certificate</span>
+                      {profile?.birthCert && !profile.birthCert.includes('placeholder') ? (
+                        <a
+                          href={profile.birthCert}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[10px] text-primary hover:underline font-semibold block mt-0.5"
+                        >
+                          View Full Document ↗
+                        </a>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground italic">None uploaded</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* New Certificate Preview / Upload */}
+                  <div className="flex flex-col gap-2">
+                    {newBirthCert ? (
+                      <div className="flex items-center gap-3 p-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border-2 border-green-500 shrink-0 bg-muted flex items-center justify-center text-lg">
+                          📄
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold text-green-700 dark:text-green-300 block truncate">New Certificate Ready</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewBirthCert('')}
+                            className="text-[10px] text-red-500 hover:underline font-semibold cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : profile?.pendingBirthCert ? (
+                      <div className="flex items-center gap-3 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden border-2 border-amber-500 shrink-0 bg-muted flex items-center justify-center text-lg">
+                          📄
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-300 block truncate">Awaiting Admin</span>
+                          <a
+                            href={profile.pendingBirthCert}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-primary hover:underline font-semibold block"
+                          >
+                            Preview Pending ↗
+                          </a>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <label className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-card hover:bg-muted border border-border rounded-lg text-xs font-semibold cursor-pointer transition text-foreground">
+                      <span>{isUploadingDoc === 'cert' ? 'Uploading...' : '📁 Choose New Certificate'}</span>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        disabled={isUploadingDoc !== null || isSubmittingDocs}
+                        onChange={(e) => handleDocUpload(e, 'cert')}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={isSubmittingDocs || isUploadingDoc !== null}
+                  onClick={() => setIsDocModalOpen(false)}
+                  className="flex-1 py-2.5 px-4 border border-border text-sm font-semibold rounded-lg text-foreground hover:bg-muted transition disabled:opacity-50 cursor-pointer text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDocs || isUploadingDoc !== null || (!newProfilePic && !newBirthCert)}
+                  className="flex-1 py-2.5 px-4 border border-transparent text-sm font-semibold rounded-lg text-primary-foreground btn-gradient focus:outline-none transition disabled:opacity-50 cursor-pointer shadow-sm text-center"
+                >
+                  {isSubmittingDocs ? 'Submitting...' : 'Submit for Admin Approval'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

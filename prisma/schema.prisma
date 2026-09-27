@@ -29,6 +29,10 @@ model User {
   flaggedReason  String?
   flaggedAt      DateTime?
   walletBalance  Float            @default(0)
+  pendingProfilePicture String?
+  pendingBirthCert      String?
+  pendingMediaStatus    String? // "PENDING"
+  pendingMediaSubmittedAt DateTime?
 }
 
 model VerificationCode {

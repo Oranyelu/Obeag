@@ -5,23 +5,38 @@ export async function GET() {
   try {
     // Lazy Generation of Monthly Dues
     const now = new Date();
-    const month = now.toLocaleString('default', { month: 'long' });
+    const shortMonth = now.toLocaleString('en-US', { month: 'short' });
+    const longMonth = now.toLocaleString('en-US', { month: 'long' });
     const year = now.getFullYear();
-    const monthlyDueTitle = `Monthly Due - ${month} ${year}`;
+    const shortTitle = `Monthly Due - ${shortMonth} ${year}`;
+    const longTitle = `Monthly Due - ${longMonth} ${year}`;
+
+    // Check if a monthly due for this month and year already exists (by title or date range)
+    const startOfMonth = new Date(year, now.getMonth(), 1);
+    const endOfMonth = new Date(year, now.getMonth() + 1, 0, 23, 59, 59, 999);
 
     const existingDue = await prisma.due.findFirst({
       where: {
-        title: monthlyDueTitle,
         type: 'MONTHLY',
+        OR: [
+          { title: shortTitle },
+          { title: longTitle },
+          {
+            dueDate: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+        ],
       },
     });
 
     if (!existingDue) {
-      console.log(`Creating automatic due: ${monthlyDueTitle}`);
+      console.log(`Creating automatic due: ${shortTitle}`);
       await prisma.due.create({
         data: {
-          title: monthlyDueTitle,
-          description: `Automatic monthly due for ${month} ${year}`,
+          title: shortTitle,
+          description: `Automatic monthly due for ${shortMonth} ${year}`,
           amount: 200,
           type: 'MONTHLY',
           dueDate: new Date(year, now.getMonth() + 1, 0), // Last day of month
