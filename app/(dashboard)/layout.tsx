@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Navbar unreadCount={unreadCount} />
 
-      <main className="flex-grow pt-6 pb-24 sm:py-10">
+      <main className="flex-grow pt-4 pb-28 sm:py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {children}
         </div>

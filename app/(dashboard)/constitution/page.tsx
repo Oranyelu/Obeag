@@ -120,69 +120,99 @@ export default function ConstitutionPage() {
     },
   ];
 
-  // Filtering based on search
   const filteredSections = sections
     .map((section) => {
-      const filteredArticles = section.articles.filter(
-        (article) =>
-          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (typeof article.content === 'string' &&
-            article.content.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const filteredArticles = section.articles.filter((article) => {
+        const titleMatch = article.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const sectionMatch = section.title.toLowerCase().includes(searchTerm.toLowerCase());
+        return titleMatch || sectionMatch;
+      });
       return { ...section, articles: filteredArticles };
     })
     .filter((section) => section.articles.length > 0);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 px-4 sm:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between bg-card p-6 rounded-xl border border-border shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-primary">Age Grade Constitution</h1>
-          <p className="text-muted-foreground text-sm mt-1">OhaBuEnyi Age Grade (Okwojo Ngwo)</p>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-2">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Official Bylaws & Charter
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            Age Grade Constitution
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            OhaBuEnyi Age Grade of Okwojo Ngwo (1998 – 2002 Cohort).
+          </p>
         </div>
+
         <Link
           href="/"
-          className="text-sm font-semibold text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/20 transition cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card/80 text-foreground font-semibold text-sm hover:bg-muted/70 transition shadow-sm self-start sm:self-auto"
         >
-          Back Home
+          <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Dashboard
         </Link>
       </div>
 
-      {/* Search Filter */}
+      {/* Search Input */}
       <div className="relative">
         <input
           type="text"
-          placeholder="Search constitution articles..."
+          placeholder="Search bylaws, articles, or welfare rules..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-3 pl-11 border border-input bg-card text-foreground rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+          className="w-full px-4 py-3 pl-11 border border-border bg-card text-foreground rounded-2xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition"
         />
-        <span className="absolute left-4 top-3.5 text-muted-foreground">🔍</span>
+        <svg className="w-4 h-4 text-muted-foreground absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
       </div>
 
-      {/* Document View */}
-      <div className="space-y-4">
+      {/* Accordion List */}
+      <div className="space-y-3.5">
         {filteredSections.map((section, sIdx) => {
           const isOpen = expandedSection === sIdx;
           return (
-            <div key={sIdx} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <div
+              key={sIdx}
+              className="bg-card rounded-2xl border border-border/80 shadow-sm overflow-hidden transition-all"
+            >
               <button
                 onClick={() => toggleSection(sIdx)}
-                className="w-full px-6 py-4 flex justify-between items-center bg-muted/20 hover:bg-muted/40 transition-colors font-bold text-lg text-foreground text-left cursor-pointer"
+                className="w-full px-5 py-4 flex justify-between items-center bg-muted/20 hover:bg-muted/40 transition-colors font-bold text-base sm:text-lg text-foreground text-left cursor-pointer"
               >
-                <span>{section.title}</span>
-                <span className="text-primary text-lg transition-transform duration-200">
-                  {isOpen ? '▲' : '▼'}
+                <span className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  {section.title}
                 </span>
+                <div
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center bg-primary/10 text-primary transition-transform duration-200 ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </button>
 
               {isOpen && (
-                <div className="px-6 py-4 divide-y divide-border/60 space-y-4 bg-card">
+                <div className="px-5 py-4 divide-y divide-border/60 space-y-4 bg-card/60">
                   {section.articles.map((art, aIdx) => (
                     <div key={aIdx} className={`pt-3 ${aIdx === 0 ? 'pt-0' : ''}`}>
-                      <h4 className="font-bold text-primary mb-2 text-sm uppercase tracking-wider">{art.title}</h4>
-                      <div className="text-foreground/90 text-sm leading-relaxed">{art.content}</div>
+                      <h4 className="font-extrabold text-primary mb-1.5 text-xs uppercase tracking-wider">
+                        {art.title}
+                      </h4>
+                      <div className="text-foreground/90 text-sm leading-relaxed">
+                        {art.content}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -192,8 +222,8 @@ export default function ConstitutionPage() {
         })}
 
         {filteredSections.length === 0 && (
-          <div className="text-center p-8 bg-card rounded-xl border border-border text-muted-foreground">
-            No constitutional articles match your search query.
+          <div className="text-center p-12 bg-card rounded-2xl border border-border text-muted-foreground">
+            No constitutional articles match "{searchTerm}".
           </div>
         )}
       </div>
