@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function TermsPage() {
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex items-center justify-between">
         <div>
@@ -50,11 +50,16 @@ export default function TermsPage() {
             Members must perform bank transfers directly to the official Age Grade bank account prior to 
             submitting a payment request in this app. 
           </p>
-          <p className="font-semibold text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
-            ⚠️ Warning: Submitting fraudulent payment confirmation requests (marking dues as paid without 
-            completing bank transfers) will be flagged as insubordination and may result in immediate suspension 
-            of app access and disciplinary fines under the Age Grade Constitution.
-          </p>
+          <div className="font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 flex items-start gap-3">
+            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>
+              <strong>Warning:</strong> Submitting fraudulent payment confirmation requests (marking dues as paid without 
+              completing bank transfers) will be flagged as insubordination and may result in immediate suspension 
+              of app access and disciplinary fines under the Age Grade Constitution.
+            </span>
+          </div>
         </section>
 
         <section className="space-y-2">

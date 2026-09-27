@@ -166,8 +166,18 @@ export default function AdminMeetingsPage() {
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div>🕒 {new Date(meeting.date).toLocaleString()}</div>
-                      <div>📍 {meeting.location || 'No location set'}</div>
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.1.8-1.3-4.5-2.7V7z" />
+                        </svg>
+                        <span>{new Date(meeting.date).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
+                        </svg>
+                        <span>{meeting.location || 'No location set'}</span>
+                      </div>
                     </div>
                     {meeting.description && (
                       <p className="text-xs text-foreground bg-card p-2 rounded border border-border/40 mt-2">

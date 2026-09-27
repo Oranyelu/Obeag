@@ -325,7 +325,12 @@ export default function PendingApprovalPage() {
                 <div className="space-y-3">
                   {newBirthCert && (
                     <div className="text-xs p-3 bg-muted/40 rounded-lg flex items-center justify-between border border-border">
-                      <span className="font-semibold text-foreground truncate max-w-[80%]">📄 Current Birth Certificate Link</span>
+                      <span className="font-semibold text-foreground truncate max-w-[80%] flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                        </svg>
+                        Current Birth Certificate Link
+                      </span>
                       <a href={newBirthCert} target="_blank" rel="noreferrer" className="text-primary font-bold hover:underline shrink-0 text-[11px]">View File</a>
                     </div>
                   )}

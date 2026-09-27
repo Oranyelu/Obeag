@@ -32,8 +32,8 @@
             filter: brightness(1);
         }
         50% {
-            transform: rotateY(180deg) scale(1.1);
-            filter: brightness(1.2) drop-shadow(0 0 15px rgba(224, 122, 63, 0.35));
+            transform: rotateY(180deg) scale(1.05);
+            filter: brightness(1.15) drop-shadow(0 0 10px rgba(5, 150, 105, 0.25));
         }
     }
 }
@@ -41,146 +41,102 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 :root {
-    /* Modern Warm Terracotta & Slate Palette */
-    --background: #fcf9f5;
-    --foreground: #2a221b;
-    --card: rgba(255, 255, 255, 0.85);
-    --card-foreground: #2a221b;
+    /* 3-Color Strict Palette: Slate (Neutral), Emerald (Primary), Amber (Status/Warning) */
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
     --popover: #ffffff;
-    --popover-foreground: #2a221b;
-    --primary: #a3471b;
+    --popover-foreground: #0f172a;
+    --primary: #059669;
     --primary-foreground: #ffffff;
-    --secondary: #f4ebe1;
-    --secondary-foreground: #3d2f26;
-    --muted: #f3eae0;
-    --muted-foreground: #7d6b5f;
-    --accent: #ea580c;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #334155;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #047857;
     --accent-foreground: #ffffff;
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    --border: rgba(163, 71, 27, 0.12);
+    --border: #e2e8f0;
     --input: #ffffff;
-    --ring: #a3471b;
-    --radius: 1rem;
+    --ring: #059669;
+    --radius: 0.875rem;
 }
 
 [data-theme='dark'] {
-    --background: #0c0f14;
+    /* 3-Color Strict Palette: Slate (Neutral), Emerald (Primary), Amber (Status/Warning) */
+    --background: #0b0f19;
     --foreground: #f8fafc;
-    --card: rgba(20, 26, 35, 0.85);
+    --card: #111827;
     --card-foreground: #f8fafc;
-    --popover: #141a23;
+    --popover: #111827;
     --popover-foreground: #f8fafc;
-    --primary: #ea580c;
-    --primary-foreground: #ffffff;
-    --secondary: #1a222e;
-    --secondary-foreground: #f1f5f9;
-    --muted: #18202b;
+    --primary: #10b981;
+    --primary-foreground: #0b0f19;
+    --secondary: #1e293b;
+    --secondary-foreground: #e2e8f0;
+    --muted: #1e293b;
     --muted-foreground: #94a3b8;
-    --accent: #f97316;
-    --accent-foreground: #0c0f14;
+    --accent: #059669;
+    --accent-foreground: #ffffff;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
-    --border: rgba(255, 255, 255, 0.08);
-    --input: #161d27;
-    --ring: #ea580c;
+    --border: #1f2937;
+    --input: #1f2937;
+    --ring: #10b981;
 }
 
 html {
     background-color: var(--background);
-    background-image: 
-        radial-gradient(circle at 10% 12%, rgba(234, 88, 12, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.07) 0%, transparent 35%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        radial-gradient(circle at 15% 80%, rgba(163, 71, 27, 0.06) 0%, transparent 40%),
-        radial-gradient(rgba(163, 71, 27, 0.04) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 28px 28px;
-    background-attachment: fixed;
-}
-
-[data-theme='dark'] html {
-    background-image: 
-        radial-gradient(circle at 10% 12%, rgba(234, 88, 12, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.09) 0%, transparent 35%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 15% 80%, rgba(234, 88, 12, 0.08) 0%, transparent 40%),
-        radial-gradient(rgba(249, 115, 22, 0.06) 1px, transparent 1px);
 }
 
 body {
     color: var(--foreground);
-    background-color: transparent;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--background);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     position: relative;
-    z-index: 0;
     min-height: 100vh;
 }
 
-/* Glassmorphism & Modern Card Faces */
+/* Crisp Clean Card Borders & Elevation */
 .bg-card {
     background-color: var(--card);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-                border-color 0.25s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 32px -12px rgba(163, 71, 27, 0.12);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
 }
 
 [data-theme='dark'] .card-hover:hover {
-    box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
 }
 
 /* Modern inputs styling */
 input, select, textarea {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s ease-in-out;
 }
 
 input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-/* Premium gradient headers */
-.text-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* Primary buttons */
+.btn-primary {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    transition: all 0.15s ease-in-out;
 }
 
-/* Premium gradient buttons */
-.btn-gradient {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-    box-shadow: 0 4px 14px 0 rgba(163, 71, 27, 0.25);
-    transition: all 0.25s ease;
-}
-
-.btn-gradient:hover:not(:disabled) {
-    opacity: 0.95;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 22px 0 rgba(163, 71, 27, 0.35);
-}
-
-.btn-gradient:active:not(:disabled) {
-    transform: translateY(0);
+.btn-primary:hover:not(:disabled) {
+    opacity: 0.92;
 }
 
 /* Safe area padding for mobile bottom navbars */
 .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
-}
-
-/* Subtle glowing pulse */
-@keyframes ambient-glow {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.05); }
-}
-
-.animate-ambient {
-    animation: ambient-glow 8s ease-in-out infinite;
 }

@@ -524,8 +524,11 @@ export default function UserManagementPage() {
       {/* Action Bar: Bulk Operations & Print Users */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/20 p-4 rounded-xl border border-border/60">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm font-semibold text-foreground flex items-center mr-2">
-            <span>👛</span> &nbsp; Bulk Financial Operations:
+          <div className="text-sm font-semibold text-foreground flex items-center gap-2 mr-2">
+            <svg className="w-4 h-4 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 7.28V5c0-1.1-.9-2-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 5h14v2H5V5zm0 14V9h6v8h9v2H5z" />
+            </svg>
+            Bulk Financial Operations:
           </div>
           <button
             onClick={() => setBulkModal({ isOpen: true, type: 'DEPOSIT', selectedUserId: '', amount: '' })}
@@ -657,7 +660,11 @@ export default function UserManagementPage() {
                     onChange={(e) => setCodeSearchQuery(e.target.value)}
                     className="w-full px-4 py-2.5 pl-10 border border-input bg-background text-foreground rounded-lg focus:ring-1 focus:ring-primary focus:outline-none text-sm"
                   />
-                  <span className="absolute left-3 top-3 text-muted-foreground text-sm">🔍</span>
+                  <span className="absolute left-3 top-3 text-muted-foreground text-sm">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                    </svg>
+                  </span>
                   {codeSearchQuery && (
                     <button
                       onClick={() => setCodeSearchQuery('')}
@@ -740,7 +747,9 @@ export default function UserManagementPage() {
                                     className="w-full h-full object-cover"
                                   />
                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
-                                    🔍
+                                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                    </svg>
                                   </div>
                                 </button>
                               ) : (
@@ -852,7 +861,9 @@ export default function UserManagementPage() {
                               }}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
-                              🔍
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                              </svg>
                             </div>
                           </button>
                         ) : (
@@ -879,12 +890,17 @@ export default function UserManagementPage() {
                             onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Profile Photo` })}
                             className="flex items-center gap-1.5 text-primary hover:underline font-semibold cursor-pointer text-left"
                           >
-                            <span>📷</span>
+                            <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0 -6.4 0M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                            </svg>
                             <span>View Profile Photo</span>
                           </button>
                         ) : (
                           <span className="text-muted-foreground italic flex items-center gap-1">
-                            <span>📷</span> No Photo Uploaded
+                            <svg className="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0 -6.4 0M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                            </svg>
+                            <span>No Photo Uploaded</span>
                           </span>
                         )}
                         {u.birthCert && (
@@ -894,7 +910,9 @@ export default function UserManagementPage() {
                             rel="noreferrer"
                             className="flex items-center gap-1.5 text-primary hover:underline font-semibold"
                           >
-                            <span>📄</span>
+                            <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                            </svg>
                             <span>Birth Certificate</span>
                           </a>
                         )}
@@ -955,7 +973,11 @@ export default function UserManagementPage() {
                     <tr>
                       <td colSpan={6} className="px-6 py-14 text-center">
                         <div className="max-w-md mx-auto space-y-3">
-                          <span className="text-3xl block">✅</span>
+                          <div className="flex justify-center">
+                            <svg className="w-10 h-10 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                            </svg>
+                          </div>
                           <p className="text-sm font-bold text-foreground">No members currently pending verification</p>
                           <p className="text-xs text-muted-foreground leading-relaxed">
                             All registered member applications have been reviewed. You can inspect the photos, profiles, and financial ledgers of all active members in the Approved Members list.
@@ -1035,7 +1057,10 @@ export default function UserManagementPage() {
                       <div className="bg-muted/20 border border-border/80 rounded-xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <span>📷</span> Profile Photo
+                            <svg className="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0 -6.4 0M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                            </svg>
+                            <span>Profile Photo</span>
                           </h4>
                           {u.pendingProfilePicture ? (
                             <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
@@ -1059,9 +1084,12 @@ export default function UserManagementPage() {
                                 <button
                                   type="button"
                                   onClick={() => setPreviewImage({ src: u.profilePicture, title: `${u.name} - Current Profile Photo` })}
-                                  className="mt-1.5 w-full text-center text-xs text-primary hover:underline font-semibold cursor-pointer"
+                                  className="mt-1.5 w-full flex items-center justify-center gap-1 text-xs text-primary hover:underline font-semibold cursor-pointer"
                                 >
-                                  Inspect 🔍
+                                  <span>Inspect</span>
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                  </svg>
                                 </button>
                               </div>
                             ) : (
@@ -1083,9 +1111,12 @@ export default function UserManagementPage() {
                                 <button
                                   type="button"
                                   onClick={() => setPreviewImage({ src: u.pendingProfilePicture!, title: `${u.name} - Proposed New Profile Photo` })}
-                                  className="mt-1.5 w-full text-center text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                                  className="mt-1.5 w-full flex items-center justify-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
                                 >
-                                  Inspect New 🔍
+                                  <span>Inspect New</span>
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                  </svg>
                                 </button>
                               </div>
                             ) : (
@@ -1101,7 +1132,10 @@ export default function UserManagementPage() {
                       <div className="bg-muted/20 border border-border/80 rounded-xl p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                            <span>📄</span> Birth Certificate
+                            <svg className="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                            </svg>
+                            <span>Birth Certificate</span>
                           </h4>
                           {u.pendingBirthCert ? (
                             <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
@@ -1129,9 +1163,12 @@ export default function UserManagementPage() {
                                   <button
                                     type="button"
                                     onClick={() => setPreviewImage({ src: u.birthCert, title: `${u.name} - Current Birth Certificate` })}
-                                    className="text-primary hover:underline cursor-pointer"
+                                    className="text-primary hover:underline cursor-pointer flex items-center gap-1"
                                   >
-                                    Preview 🔍
+                                    <span>Preview</span>
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                    </svg>
                                   </button>
                                   <a href={u.birthCert} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                                     Open ↗
@@ -1161,9 +1198,12 @@ export default function UserManagementPage() {
                                   <button
                                     type="button"
                                     onClick={() => setPreviewImage({ src: u.pendingBirthCert!, title: `${u.name} - Proposed Birth Certificate` })}
-                                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                    className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
                                   >
-                                    Preview New 🔍
+                                    <span>Preview New</span>
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z" />
+                                    </svg>
                                   </button>
                                   <a href={u.pendingBirthCert} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
                                     Open ↗
@@ -1223,7 +1263,11 @@ export default function UserManagementPage() {
 
                 {mediaPendingUsers.length === 0 && (
                   <div className="py-16 text-center space-y-3">
-                    <span className="text-4xl block">🖼️</span>
+                    <div className="flex justify-center text-muted-foreground">
+                      <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                      </svg>
+                    </div>
                     <h4 className="text-base font-bold text-foreground">No Document Updates Pending Review</h4>
                     <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
                       When active members request to change their profile picture or birth certificate, their submission will appear here for comparison and administrative approval before replacing files in storage.
@@ -1269,7 +1313,9 @@ export default function UserManagementPage() {
                               }}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
-                              🔍
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                              </svg>
                             </div>
                           </button>
                         ) : (
@@ -1343,7 +1389,9 @@ export default function UserManagementPage() {
                               }}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px]">
-                              🔍
+                              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                              </svg>
                             </div>
                           </button>
                         ) : (
@@ -1472,9 +1520,12 @@ export default function UserManagementPage() {
               <h2 className="text-xl font-bold text-foreground">Member Details</h2>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="text-muted-foreground hover:text-foreground text-xl font-semibold cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer"
+                title="Close"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -1497,7 +1548,9 @@ export default function UserManagementPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-semibold">
-                      <span>🔍</span>
+                      <svg className="w-4 h-4 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                      </svg>
                       <span>Enlarge</span>
                     </div>
                   </button>
@@ -1552,7 +1605,9 @@ export default function UserManagementPage() {
               {/* Unactivated Informational Banner */}
               {selectedUser.status === 'NOT_ACTIVATED' && (
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
-                  <span className="text-2xl shrink-0">ℹ️</span>
+                  <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                  </svg>
                   <div className="space-y-1">
                     <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400">Account Awaiting Member Activation</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -1587,8 +1642,10 @@ export default function UserManagementPage() {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-2xl">
-                            📷
+                          <div className="w-12 h-12 rounded-lg bg-muted border border-border shrink-0 flex items-center justify-center text-muted-foreground">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0 -6.4 0M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                            </svg>
                           </div>
                         )}
                         <div className="min-w-0">
@@ -1601,9 +1658,12 @@ export default function UserManagementPage() {
                           <button
                             type="button"
                             onClick={() => setPreviewImage({ src: selectedUser.profilePicture, title: `${selectedUser.name} - Profile Photo` })}
-                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                           >
-                            Inspect 🔍
+                            <span>Inspect</span>
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
                           </button>
                           <a
                             href={selectedUser.profilePicture}
@@ -1622,7 +1682,9 @@ export default function UserManagementPage() {
                     {/* Birth Certificate Card */}
                     <div className="bg-muted/30 border border-border p-4 rounded-xl flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-2xl shrink-0">📄</span>
+                        <svg className="w-6 h-6 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                        </svg>
                         <div className="min-w-0">
                           <h4 className="text-sm font-bold text-foreground truncate">Birth Certificate</h4>
                           <p className="text-xs text-muted-foreground">Proof of age / baptismal record.</p>
@@ -1633,9 +1695,12 @@ export default function UserManagementPage() {
                           <button
                             type="button"
                             onClick={() => setPreviewImage({ src: selectedUser.birthCert, title: `${selectedUser.name} - Birth Certificate` })}
-                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                            className="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1"
                           >
-                            Preview 🔍
+                            <span>Preview</span>
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
                           </button>
                           <a
                             href={selectedUser.birthCert}
@@ -1669,7 +1734,11 @@ export default function UserManagementPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-muted/20 border border-dashed border-border p-4 rounded-xl flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl opacity-50">📷</span>
+                        <div className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground opacity-60">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 12m-3.2 0a3.2 3.2 0 1 0 6.4 0 3.2 3.2 0 1 0 -6.4 0M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" />
+                          </svg>
+                        </div>
                         <div>
                           <h4 className="text-sm font-bold text-foreground">Passport / Profile Photo</h4>
                           <p className="text-xs text-amber-600 dark:text-amber-400">Awaiting member upload upon activation</p>
@@ -1680,7 +1749,11 @@ export default function UserManagementPage() {
 
                     <div className="bg-muted/20 border border-dashed border-border p-4 rounded-xl flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl opacity-50">📄</span>
+                        <div className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground opacity-60">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                          </svg>
+                        </div>
                         <div>
                           <h4 className="text-sm font-bold text-foreground">Birth Certificate</h4>
                           <p className="text-xs text-amber-600 dark:text-amber-400">Awaiting member upload upon activation</p>
@@ -1698,7 +1771,10 @@ export default function UserManagementPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-500/20 pb-3">
                     <div>
                       <h4 className="text-sm font-bold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
-                        <span>⏳</span> Pending Document Update Under Review
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.1.8-1.3-4.5-2.7V7z" />
+                        </svg>
+                        <span>Pending Document Update Under Review</span>
                       </h4>
                       <p className="text-xs text-muted-foreground">
                         Submitted: {selectedUser.pendingMediaSubmittedAt ? new Date(selectedUser.pendingMediaSubmittedAt).toLocaleString() : 'Recently'}
@@ -1747,9 +1823,12 @@ export default function UserManagementPage() {
                         <button
                           type="button"
                           onClick={() => setPreviewImage({ src: selectedUser.pendingProfilePicture!, title: `${selectedUser.name} - Proposed New Profile Photo` })}
-                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer"
+                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer flex items-center gap-1"
                         >
-                          Inspect 🔍
+                          <span>Inspect</span>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                          </svg>
                         </button>
                       </div>
                     )}
@@ -1757,7 +1836,9 @@ export default function UserManagementPage() {
                     {selectedUser.pendingBirthCert && (
                       <div className="bg-card/70 border border-blue-500/20 p-3 rounded-lg flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-2xl">📄</span>
+                          <svg className="w-6 h-6 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v6h6v10H6z" />
+                          </svg>
                           <div>
                             <span className="font-bold text-foreground block">New Birth Certificate</span>
                             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Awaiting Approval</span>
@@ -1766,9 +1847,12 @@ export default function UserManagementPage() {
                         <button
                           type="button"
                           onClick={() => setPreviewImage({ src: selectedUser.pendingBirthCert!, title: `${selectedUser.name} - Proposed Birth Certificate` })}
-                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer"
+                          className="bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1.5 rounded font-semibold cursor-pointer flex items-center gap-1"
                         >
-                          Inspect 🔍
+                          <span>Inspect</span>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                          </svg>
                         </button>
                       </div>
                     )}
@@ -1910,14 +1994,19 @@ export default function UserManagementPage() {
 
               {/* Flagged Status Banner */}
               {selectedUser.status === 'FLAGGED' && (
-                <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-xl text-sm mt-4 text-orange-600 dark:text-orange-400 font-semibold">
-                  ⚠️ This profile is currently flagged for revision.
-                  <span className="block text-xs text-muted-foreground font-normal mt-1">
-                    Reason: {selectedUser.flaggedReason === 'DOCUMENT_MISMATCH' && 'Information mismatch on documents.'}
-                    {selectedUser.flaggedReason === 'INVALID_BIRTH_CERT' && 'User did not upload correct birth certificate.'}
-                    {selectedUser.flaggedReason === 'INVALID_PROFILE_PIC' && 'Profile picture not visible or inappropriate.'}
-                    {selectedUser.flaggedReason === 'INCOMPLETE_NAME' && 'Incomplete name details.'}
-                  </span>
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-sm mt-4 text-amber-600 dark:text-amber-400 font-semibold flex items-start gap-2.5">
+                  <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <span>This profile is currently flagged for revision.</span>
+                    <span className="block text-xs text-muted-foreground font-normal mt-1">
+                      Reason: {selectedUser.flaggedReason === 'DOCUMENT_MISMATCH' && 'Information mismatch on documents.'}
+                      {selectedUser.flaggedReason === 'INVALID_BIRTH_CERT' && 'User did not upload correct birth certificate.'}
+                      {selectedUser.flaggedReason === 'INVALID_PROFILE_PIC' && 'Profile picture not visible or inappropriate.'}
+                      {selectedUser.flaggedReason === 'INCOMPLETE_NAME' && 'Incomplete name details.'}
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -2066,9 +2155,12 @@ export default function UserManagementPage() {
               </h2>
               <button
                 onClick={() => setBulkModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-muted-foreground hover:text-foreground text-xl font-semibold cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer"
+                title="Close"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -2151,9 +2243,12 @@ export default function UserManagementPage() {
               </h2>
               <button
                 onClick={() => setDeclineMediaModal({ isOpen: false, userId: '', userName: '', feedback: '' })}
-                className="text-muted-foreground hover:text-foreground text-xl font-semibold cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer"
+                title="Close"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -2224,9 +2319,12 @@ export default function UserManagementPage() {
                 <button
                   type="button"
                   onClick={() => setPreviewImage(null)}
-                  className="text-muted-foreground hover:text-foreground text-xl font-bold w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition cursor-pointer"
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer"
+                  title="Close"
                 >
-                  ✕
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -2239,7 +2337,7 @@ export default function UserManagementPage() {
               />
             </div>
             <div className="px-6 py-3 border-t border-border bg-muted/20 flex justify-between items-center text-xs text-muted-foreground">
-              <span>Click outside or press ✕ to close</span>
+              <span>Click outside or click Close</span>
               <button
                 type="button"
                 onClick={() => setPreviewImage(null)}

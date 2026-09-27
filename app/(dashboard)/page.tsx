@@ -358,7 +358,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse max-w-7xl mx-auto">
+      <div className="space-y-6 animate-pulse w-full">
         <div className="h-32 bg-card rounded-2xl border border-border"></div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="h-28 bg-card rounded-2xl border border-border"></div>
@@ -377,7 +377,11 @@ export default function DashboardPage() {
   if (!data) {
     return (
       <div className="max-w-md mx-auto py-16 text-center space-y-4">
-        <span className="text-4xl block">⚠️</span>
+        <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
         <h2 className="text-xl font-bold text-foreground">Unable to load dashboard</h2>
         <p className="text-xs text-muted-foreground">Please check your internet connection and try refreshing.</p>
         <button
@@ -391,22 +395,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-5 sm:space-y-6 w-full">
       
       {/* 1. HERO MEMBER GREETING & STATUS BANNER */}
       <div
         id="header-section"
         className={`bg-card rounded-2xl sm:rounded-3xl border border-border/80 shadow-xs p-5 sm:p-7 relative overflow-hidden transition-all duration-300 card-hover ${getHighlightClass('header-section')}`}
       >
-        <div className="absolute top-0 right-0 w-80 h-80 bg-radial from-primary/10 to-transparent rounded-full blur-2xl -mr-20 -mt-20 pointer-events-none"></div>
-
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
           {/* Member Profile Avatar & Greetings */}
           <div className="flex items-center gap-4 sm:gap-5 min-w-0">
             {profile?.profilePicture ? (
               <div
                 onClick={() => setPreviewImage({ src: profile.profilePicture, title: `${profile.name || 'Your'} Profile Photo` })}
-                className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-md bg-muted shrink-0 cursor-pointer group"
+                className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-primary/50 shadow-sm bg-muted shrink-0 cursor-pointer group"
                 title="Click to view full photo"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -415,8 +417,10 @@ export default function DashboardPage() {
                   alt="Profile"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
-                  🔍
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
                 </div>
               </div>
             ) : (
@@ -430,8 +434,8 @@ export default function DashboardPage() {
                 <span className="text-xs font-bold text-primary uppercase tracking-wider">
                   {getGreeting()}
                 </span>
-                <span className="inline-flex items-center gap-1 bg-green-500/10 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                   Active Member
                 </span>
               </div>
@@ -443,7 +447,7 @@ export default function DashboardPage() {
               <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-1">
                 <span>Okwojo Ngwo Community: <strong className="font-semibold text-foreground">{profile?.community || 'Member'}</strong></span>
                 {session?.user?.role === 'ADMIN' && (
-                  <span className="bg-purple-500/10 text-purple-600 dark:text-purple-400 px-1.5 py-0.2 rounded font-bold text-[10px]">
+                  <span className="bg-primary/10 text-primary px-1.5 py-0.2 rounded font-bold text-[10px]">
                     Admin
                   </span>
                 )}
@@ -467,7 +471,9 @@ export default function DashboardPage() {
                 disabled={isPaying}
                 className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2"
               >
-                <span>💳</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
                 <span>Pay Outstanding (₦{data.stats.amountOwed.toLocaleString()})</span>
               </button>
             )}
@@ -483,7 +489,9 @@ export default function DashboardPage() {
               }}
               className="bg-secondary hover:bg-muted text-foreground border border-border/80 text-xs font-bold px-3.5 py-2.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
-              <span>📷</span>
+              <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               <span>Update Documents</span>
             </button>
 
@@ -501,7 +509,7 @@ export default function DashboardPage() {
             {session?.user?.role === 'ADMIN' && (
               <Link
                 href="/admin"
-                className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-xs transition"
+                className="bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-xs transition"
               >
                 Admin Portal ↗
               </Link>
@@ -513,7 +521,7 @@ export default function DashboardPage() {
       {/* 2. EXECUTIVE FINANCIAL KPI DECK */}
       <div
         id="kpi-deck"
-        className={`grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 transition-all duration-300 ${getHighlightClass('kpi-deck')}`}
+        className={`grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 transition-all duration-300 ${getHighlightClass('kpi-deck')}`}
       >
         {/* KPI 1: Outstanding Balance */}
         <div className="bg-card rounded-2xl border border-border/80 p-4 sm:p-5 shadow-xs flex flex-col justify-between card-hover">
@@ -521,16 +529,18 @@ export default function DashboardPage() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               Total Outstanding
             </span>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-bold">
-              💳
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight block">
+            <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight block">
               ₦{data.stats.amountOwed.toLocaleString()}
             </span>
             <span className="text-[10px] text-muted-foreground block mt-0.5">
-              {data.stats.amountOwed > 0 ? `${unpaidCount} unpaid dues pending` : 'All dues settled! ✨'}
+              {data.stats.amountOwed > 0 ? `${unpaidCount} unpaid dues pending` : 'All dues settled'}
             </span>
           </div>
         </div>
@@ -541,12 +551,14 @@ export default function DashboardPage() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               Total Contributed
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
-              🛡️
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight block">
+            <span className="text-xl sm:text-2xl font-black text-primary tracking-tight block">
               ₦{data.stats.totalPaidAmount.toLocaleString()}
             </span>
             <span className="text-[10px] text-muted-foreground block mt-0.5">
@@ -561,12 +573,14 @@ export default function DashboardPage() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               Wallet Balance
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold">
-              👛
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight block">
+            <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight block">
               ₦{(data.stats.walletBalance || 0).toLocaleString()}
             </span>
             <span className="text-[10px] text-muted-foreground block mt-0.5">
@@ -608,15 +622,19 @@ export default function DashboardPage() {
                   placeholder="Search dues..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full text-xs bg-muted/40 border border-input rounded-xl px-3 py-2 pl-8 text-foreground focus:ring-2 focus:ring-primary/20"
+                  className="w-full text-xs bg-muted/40 border border-input rounded-xl px-3 py-2 pl-8 pr-7 text-foreground focus:ring-2 focus:ring-primary/20"
                 />
-                <span className="absolute left-2.5 top-2.5 text-xs text-muted-foreground">🔍</span>
+                <svg className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
                   >
-                    ✕
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 )}
               </div>
@@ -641,14 +659,14 @@ export default function DashboardPage() {
                 onClick={() => setActiveTab('UNPAID')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === 'UNPAID'
-                    ? 'bg-rose-600 text-white shadow-xs'
+                    ? 'bg-foreground text-background shadow-xs'
                     : 'bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 <span>Unpaid</span>
                 {unpaidCount > 0 && (
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                    activeTab === 'UNPAID' ? 'bg-white text-rose-600' : 'bg-rose-500/10 text-rose-600'
+                    activeTab === 'UNPAID' ? 'bg-background text-foreground' : 'bg-muted text-foreground'
                   }`}>
                     {unpaidCount}
                   </span>
@@ -679,13 +697,13 @@ export default function DashboardPage() {
                 onClick={() => setActiveTab('PAID')}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   activeTab === 'PAID'
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                    ? 'bg-primary text-primary-foreground shadow-xs'
                     : 'bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted'
                 }`}
               >
                 <span>Paid</span>
                 <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                  activeTab === 'PAID' ? 'bg-white text-emerald-600' : 'bg-emerald-500/10 text-emerald-600'
+                  activeTab === 'PAID' ? 'bg-primary-foreground text-primary' : 'bg-primary/10 text-primary'
                 }`}>
                   {paidCount}
                 </span>
@@ -723,8 +741,10 @@ export default function DashboardPage() {
 
                   <div>
                     {due.isPaid ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                        <span>✓</span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
                         <span>Paid</span>
                       </span>
                     ) : due.isPending ? (
@@ -749,7 +769,11 @@ export default function DashboardPage() {
 
             {filteredDues.length === 0 && (
               <div className="py-16 text-center space-y-3">
-                <span className="text-3xl block">✨</span>
+                <div className="w-12 h-12 mx-auto rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
                 <h4 className="text-sm font-bold text-foreground">No dues matching this filter</h4>
                 <p className="text-xs text-muted-foreground">Try selecting a different tab or clearing your search.</p>
               </div>
@@ -781,7 +805,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                  🏦
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-foreground">Age Grade Bank Details</h3>
@@ -811,9 +837,18 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={copyAccountNumber}
-                    className="text-[11px] font-sans font-bold px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer shadow-xs"
+                    className="text-[11px] font-sans font-bold px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer shadow-xs inline-flex items-center gap-1"
                   >
-                    {copiedBank ? 'Copied! ✓' : 'Copy'}
+                    {copiedBank ? (
+                      <>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      'Copy'
+                    )}
                   </button>
                 </div>
               </div>
@@ -828,7 +863,9 @@ export default function DashboardPage() {
           <div className="bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 card-hover">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-base">📅</span>
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 <h3 className="font-bold text-sm text-foreground">Upcoming Meetings</h3>
               </div>
             </div>
@@ -839,12 +876,17 @@ export default function DashboardPage() {
                   <h4 className="font-bold text-xs text-foreground">{meeting.title}</h4>
                   <div className="text-[11px] text-muted-foreground space-y-0.5">
                     <div className="flex items-center gap-1.5">
-                      <span>🕒</span>
+                      <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       <span>{new Date(meeting.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                     </div>
                     {meeting.location && (
                       <div className="flex items-center gap-1.5">
-                        <span>📍</span>
+                        <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                         <span>{meeting.location}</span>
                       </div>
                     )}
@@ -862,7 +904,9 @@ export default function DashboardPage() {
           <div className="bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 card-hover">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-base">📢</span>
+                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                </svg>
                 <h3 className="font-bold text-sm text-foreground">Recent Broadcasts</h3>
               </div>
               <Link href="/notifications" className="text-xs font-bold text-primary hover:underline">
@@ -892,7 +936,6 @@ export default function DashboardPage() {
           </div>
 
         </div>
-
       </div>
 
       {/* MODAL 1: PAYMENT CONFIRMATION MODAL */}
@@ -904,10 +947,13 @@ export default function DashboardPage() {
           ></div>
 
           <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[85vh] overflow-y-auto">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
 
             <h3 className="text-xl font-black text-foreground mb-2 flex items-center gap-2">
-              <span>🏦</span> Settle Dues Transfer
+              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span>Settle Dues Transfer</span>
             </h3>
             <p className="text-muted-foreground text-xs leading-relaxed mb-4">
               Please send the total amount to the age grade bank account, then tap <strong>I Have Sent The Money</strong> to notify the administrator.
@@ -956,7 +1002,7 @@ export default function DashboardPage() {
                 type="button"
                 disabled={isPaying}
                 onClick={submitPayment}
-                className="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground btn-gradient transition disabled:opacity-50 cursor-pointer shadow-xs"
+                className="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
               >
                 {isPaying ? 'Submitting...' : 'I Have Sent The Money'}
               </button>
@@ -974,12 +1020,15 @@ export default function DashboardPage() {
           ></div>
 
           <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-xl w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[85vh] overflow-y-auto">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-xl font-black text-foreground flex items-center gap-2">
-                  <span>📸</span> Update Member Documents
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Update Member Documents</span>
                 </h3>
                 <p className="text-muted-foreground text-xs leading-relaxed mt-1">
                   Upload a new profile picture and/or birth certificate. These updates require administrative review before replacing your active documents in storage.
@@ -988,9 +1037,11 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setIsDocModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground text-lg font-bold p-1 cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -1000,7 +1051,7 @@ export default function DashboardPage() {
               </div>
             )}
             {docSuccess && (
-              <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 rounded-xl text-xs font-semibold">
+              <div className="mb-4 p-3 bg-primary/10 border border-primary/20 text-primary rounded-xl text-xs font-semibold">
                 {docSuccess}
               </div>
             )}
@@ -1021,7 +1072,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-3 pt-1">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={newProfilePic} alt="Uploaded" className="w-12 h-12 rounded-full object-cover border border-primary shadow-xs" />
-                    <span className="text-xs text-green-600 dark:text-green-400 font-semibold">Ready for submission</span>
+                    <span className="text-xs text-primary font-semibold">Ready for submission</span>
                   </div>
                 )}
               </div>
@@ -1039,8 +1090,10 @@ export default function DashboardPage() {
                 {isUploadingDoc === 'cert' && <span className="text-xs text-primary block">Uploading document...</span>}
                 {newBirthCert && (
                   <div className="flex items-center gap-3 pt-1">
-                    <span className="text-2xl">📄</span>
-                    <span className="text-xs text-green-600 dark:text-green-400 font-semibold">Ready for submission</span>
+                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-xs text-primary font-semibold">Ready for submission</span>
                   </div>
                 )}
               </div>
@@ -1058,7 +1111,7 @@ export default function DashboardPage() {
                 type="button"
                 onClick={submitDocumentUpdate}
                 disabled={isSubmittingDocs || isUploadingDoc !== null || (!newProfilePic && !newBirthCert)}
-                className="px-5 py-2 text-xs font-bold rounded-xl text-primary-foreground btn-gradient transition disabled:opacity-50 cursor-pointer shadow-xs"
+                className="px-5 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
               >
                 {isSubmittingDocs ? 'Submitting...' : 'Submit for Admin Approval'}
               </button>
@@ -1073,11 +1126,15 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md"></div>
 
           <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
 
             <div className="text-center mb-6">
-              <span className="text-4xl">🎉</span>
-              <h3 className="text-2xl font-black text-primary mt-2">Welcome to OBEAG!</h3>
+              <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-black text-foreground">Welcome to OBEAG</h3>
               <p className="text-muted-foreground text-xs mt-1">OhaBuEnyi Age Grade Digital Portal</p>
             </div>
 
@@ -1094,17 +1151,23 @@ export default function DashboardPage() {
                 <Link
                   href="/constitution"
                   target="_blank"
-                  className="text-xs text-primary font-bold hover:underline"
+                  className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1"
                 >
-                  📜 Read Constitution
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span>Read Constitution</span>
                 </Link>
                 <span className="text-muted-foreground">•</span>
                 <Link
                   href="/terms"
                   target="_blank"
-                  className="text-xs text-primary font-bold hover:underline"
+                  className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1"
                 >
-                  📄 View Terms of Use
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>View Terms of Use</span>
                 </Link>
               </div>
 
@@ -1130,7 +1193,7 @@ export default function DashboardPage() {
                 setShowOnboarding(false);
                 setShowTutorial(true);
               }}
-              className="w-full py-3 text-xs font-bold text-primary-foreground btn-gradient rounded-xl transition shadow-xs disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 rounded-xl transition shadow-xs disabled:opacity-50 cursor-pointer"
             >
               Continue to Portal →
             </button>
@@ -1144,7 +1207,7 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] pointer-events-auto"></div>
 
           <div className="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md bg-card border-2 border-primary shadow-2xl p-5 rounded-2xl pointer-events-auto z-50 animate-in slide-in-from-bottom duration-300">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
 
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-primary uppercase tracking-wider">
@@ -1202,7 +1265,7 @@ export default function DashboardPage() {
                       setShowTutorial(false);
                     }
                   }}
-                  className="px-4 py-1.5 text-xs font-bold text-primary-foreground btn-gradient rounded-lg transition cursor-pointer"
+                  className="px-4 py-1.5 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 rounded-lg transition cursor-pointer"
                 >
                   {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
                 </button>
@@ -1226,9 +1289,11 @@ export default function DashboardPage() {
               <h3 className="font-bold text-sm text-foreground truncate">{previewImage.title}</h3>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="text-muted-foreground hover:text-foreground text-lg font-bold cursor-pointer"
+                className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             <div className="p-6 flex items-center justify-center bg-black/30 max-h-[70vh] overflow-auto">

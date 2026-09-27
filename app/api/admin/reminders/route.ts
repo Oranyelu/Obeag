@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         let meetingsHtml = '<p>No upcoming meetings scheduled at this time.</p>';
         if (upcomingMeetings.length > 0) {
           const meetingListItems = upcomingMeetings
-            .map(m => `<li><strong>${m.title}</strong><br/>🕒 ${new Date(m.date).toLocaleString()}<br/>📍 ${m.location || 'No location set'}</li>`)
+            .map(m => `<li><strong>${m.title}</strong><br/>Time: ${new Date(m.date).toLocaleString()}<br/>Location: ${m.location || 'No location set'}</li>`)
             .join('');
           meetingsHtml = `<ul>${meetingListItems}</ul>`;
         }

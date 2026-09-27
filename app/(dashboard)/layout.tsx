@@ -24,11 +24,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200">
       <Navbar unreadCount={unreadCount} />
 
-      <main className="flex-grow pt-4 pb-28 sm:py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow pt-3 pb-24 sm:py-5 w-full">
+        <div className="w-full px-2 sm:px-4 lg:px-6">
           {children}
         </div>
       </main>
