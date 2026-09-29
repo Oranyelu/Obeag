@@ -148,9 +148,24 @@ function LoginForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-lg text-primary-foreground btn-gradient transition disabled:opacity-50 cursor-pointer"
+          className="group relative w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:opacity-90 shadow-md shadow-primary/20 transition-all disabled:opacity-50 cursor-pointer active:scale-[0.99]"
         >
-          {isLoading ? 'Signing in...' : 'Sign in'}
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              <span>Signing in...</span>
+            </>
+          ) : (
+            <>
+              <span>Sign in</span>
+              <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </>
+          )}
         </button>
       </div>
 
@@ -160,7 +175,7 @@ function LoginForm() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-card px-2.5 text-muted-foreground font-semibold">Or continue with</span>
         </div>
       </div>
 
@@ -169,9 +184,12 @@ function LoginForm() {
         <div id="google-signin-btn" className="w-full"></div>
       </div>
 
-      <div className="text-sm text-center">
-        <Link href="/register" className="font-medium text-primary hover:text-accent transition">
-          Don't have an account? Register
+      <div className="text-sm text-center pt-2">
+        <Link href="/register" className="font-semibold text-primary hover:underline transition inline-flex items-center gap-1">
+          <span>Don&apos;t have an account? Register</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
         </Link>
       </div>
     </form>
@@ -180,15 +198,18 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="bg-card/85 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-border/80 relative overflow-hidden ring-1 ring-border/20 max-w-md mx-auto">
+    <div className="bg-card p-6 sm:p-8 rounded-2xl shadow-xl border border-border relative overflow-hidden max-w-md mx-auto">
       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-accent"></div>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Image src="/logo.svg" alt="OBEAG Logo" width={64} height={64} className="h-16 w-16" />
+          <Image src="/logo.svg" alt="OBEAG Logo" width={64} height={64} className="h-14 w-14 sm:h-16 sm:w-16" />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gradient">
+        <h2 className="mt-4 text-center text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
           Sign in to your account
         </h2>
+        <p className="mt-1 text-center text-xs sm:text-sm text-muted-foreground">
+          Welcome back to the OBEAG portal
+        </p>
       </div>
       <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading login form...</div>}>
         <LoginForm />

@@ -140,6 +140,40 @@ input:focus, select:focus, textarea:focus {
     opacity: 0.92;
 }
 
+/* Gradient Utilities & Auth Background */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-gradient {
+    background-color: var(--primary);
+    background-image: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: var(--primary-foreground);
+    box-shadow: 0 4px 14px -2px rgba(139, 69, 19, 0.25);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-gradient:hover:not(:disabled) {
+    opacity: 0.94;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -2px rgba(139, 69, 19, 0.35);
+}
+
+.btn-gradient:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.auth-bg {
+    background-color: var(--background);
+    background-image: radial-gradient(circle at 50% 0%, rgba(139, 69, 19, 0.05) 0%, transparent 60%);
+}
+
+[data-theme='dark'] .auth-bg {
+    background-image: radial-gradient(circle at 50% 0%, rgba(201, 107, 52, 0.08) 0%, transparent 60%);
+}
+
 /* Safe area padding for mobile bottom navbars */
 .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
