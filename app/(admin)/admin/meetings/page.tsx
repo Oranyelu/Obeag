@@ -78,18 +78,18 @@ export default function AdminMeetingsPage() {
   const pastMeetings = meetings.filter(m => new Date(m.date) < new Date());
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto w-full min-w-0 space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-primary">Manage Meetings</h1>
-        <p className="text-muted-foreground">Schedule new meetings and view meeting history.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary">Manage Meetings</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Schedule new meetings and view meeting history.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         
         {/* Form Column */}
         <div className="lg:col-span-1">
-          <div className="bg-card p-6 rounded-xl shadow-md border border-border sticky top-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Schedule a Meeting</h2>
+          <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border sticky top-6">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Schedule a Meeting</h2>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
@@ -149,8 +149,8 @@ export default function AdminMeetingsPage() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Upcoming Meetings */}
-          <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-            <h2 className="text-xl font-bold text-foreground mb-4">Upcoming Meetings</h2>
+          <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Upcoming Meetings</h2>
             {fetching ? (
               <p className="text-sm text-muted-foreground">Loading meetings...</p>
             ) : upcomingMeetings.length === 0 ? (
@@ -191,8 +191,8 @@ export default function AdminMeetingsPage() {
           </div>
 
           {/* Past Meetings */}
-          <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-            <h2 className="text-xl font-bold text-foreground mb-4">Past Meetings</h2>
+          <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Past Meetings</h2>
             {fetching ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
             ) : pastMeetings.length === 0 ? (

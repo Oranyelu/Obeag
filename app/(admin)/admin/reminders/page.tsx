@@ -66,14 +66,17 @@ export default function RemindersPage() {
   if (loading) return <div className="p-8 text-center">Loading defaulters...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-primary">Overdue Reminders</h1>
+    <div className="max-w-4xl mx-auto w-full min-w-0 space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Overdue Reminders</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Send payment notification reminders to members with overdue dues.</p>
+        </div>
         {defaulters.length > 0 && (
           <button
             onClick={() => sendReminder()}
             disabled={sendingAll || sendingId !== null}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 transition font-semibold"
+            className="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm px-4 py-2 rounded-lg disabled:opacity-50 transition font-semibold cursor-pointer shadow-sm"
           >
             {sendingAll ? 'Sending All...' : 'Send Reminders to All'}
           </button>
@@ -81,40 +84,40 @@ export default function RemindersPage() {
       </div>
 
       {message && (
-        <div className={`mb-6 p-4 rounded-md ${message.startsWith('Error') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+        <div className={`p-4 rounded-xl text-sm border ${message.startsWith('Error') ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-300'}`}>
           {message}
         </div>
       )}
       
-      <div className="bg-card shadow-md rounded-lg border border-border overflow-hidden">
+      <div className="bg-card shadow-sm rounded-xl border border-border overflow-hidden">
         {defaulters.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
+          <div className="p-8 sm:p-12 text-center text-sm text-muted-foreground">
             No overdue payments found. Everyone is paid up!
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Overdue Items</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount Owed</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Action</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Overdue Items</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount Owed</th>
+                  <th className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {defaulters.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{user.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.overdueCount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">{user.amountOwed.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{user.name}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{user.email}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.overdueCount}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">₦{user.amountOwed.toLocaleString()}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => sendReminder(user.id)}
                         disabled={sendingAll || sendingId !== null}
-                        className="text-primary hover:text-primary/80 disabled:opacity-50"
+                        className="text-primary hover:underline font-semibold text-xs disabled:opacity-50 cursor-pointer"
                       >
                         {sendingId === user.id ? 'Sending...' : 'Send Reminder'}
                       </button>

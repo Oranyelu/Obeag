@@ -83,18 +83,18 @@ export default function FinancesPage() {
   if (!data) return <div className="p-8 text-center text-red-500">Failed to load data.</div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto w-full min-w-0 space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Financial Records</h1>
-          <p className="text-muted-foreground text-sm">Audit income, track group expenses, and export financial sheets.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Financial Records</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Audit income, track group expenses, and export financial sheets.</p>
         </div>
         <a
           href="/api/admin/finances/export"
           download
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition shadow hover:shadow-lg cursor-pointer"
+          className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
           Export Ledger (CSV)
@@ -102,43 +102,43 @@ export default function FinancesPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Income</h3>
-          <p className="mt-2 text-3xl font-bold text-green-600">{data.totalIncome.toLocaleString()}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+          <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Income</h3>
+          <p className="mt-2 text-2xl sm:text-3xl font-bold text-green-600">₦{data.totalIncome.toLocaleString()}</p>
         </div>
-        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Expenses</h3>
-          <p className="mt-2 text-3xl font-bold text-red-600">{data.totalExpenses.toLocaleString()}</p>
+        <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+          <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Expenses</h3>
+          <p className="mt-2 text-2xl sm:text-3xl font-bold text-red-600">₦{data.totalExpenses.toLocaleString()}</p>
         </div>
-        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Net Balance</h3>
-          <p className={`mt-2 text-3xl font-bold ${data.netBalance >= 0 ? 'text-primary' : 'text-red-600'}`}>
-            {data.netBalance.toLocaleString()}
+        <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+          <h3 className="text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Net Balance</h3>
+          <p className={`mt-2 text-2xl sm:text-3xl font-bold ${data.netBalance >= 0 ? 'text-primary' : 'text-red-600'}`}>
+            ₦{data.netBalance.toLocaleString()}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Income Breakdown */}
-        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-4">Income Breakdown</h2>
-          <div className="space-y-4">
+        <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Income Breakdown</h2>
+          <div className="space-y-3">
             {Object.entries(data.incomeByGroup).map(([type, amount]) => (
-              <div key={type} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+              <div key={type} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg text-sm">
                 <span className="font-medium text-foreground">{type}</span>
-                <span className="font-bold text-green-600">{amount.toLocaleString()}</span>
+                <span className="font-bold text-green-600">₦{amount.toLocaleString()}</span>
               </div>
             ))}
             {Object.keys(data.incomeByGroup).length === 0 && (
-              <p className="text-muted-foreground text-center py-4">No income recorded yet.</p>
+              <p className="text-muted-foreground text-center py-4 text-sm">No income recorded yet.</p>
             )}
           </div>
         </div>
 
         {/* Add Expense Form */}
-        <div className="bg-card p-6 rounded-xl shadow-md border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-4">Record Expense</h2>
+        <div className="bg-card p-4 sm:p-6 rounded-xl shadow-sm border border-border">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground mb-4">Record Expense</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground">Title</label>
@@ -153,7 +153,7 @@ export default function FinancesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground">Amount ()</label>
+                <label className="block text-sm font-medium text-foreground">Amount (₦)</label>
                 <input
                   {...register('amount')}
                   type="number"
@@ -226,7 +226,7 @@ export default function FinancesPage() {
                       {expense.description || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-red-600">
-                      -{expense.amount.toLocaleString()}
+                      -₦{expense.amount.toLocaleString()}
                     </td>
                   </tr>
                 ))}

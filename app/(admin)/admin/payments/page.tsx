@@ -98,24 +98,24 @@ export default function ConfirmPaymentsPage() {
   const pastPayments = payments.filter(p => p.status !== 'PENDING');
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto w-full min-w-0">
       <div>
-        <h1 className="text-3xl font-bold text-primary">Confirm Dues Payments</h1>
-        <p className="text-muted-foreground">Verify and confirm bank transfer notifications submitted by members.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary">Confirm Dues Payments</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">Verify and confirm bank transfer notifications submitted by members.</p>
       </div>
 
       {/* Pending Payments Section */}
-      <div className="bg-card shadow-lg rounded-xl border border-border overflow-hidden">
-        <div className="px-6 py-4 bg-muted/40 border-b border-border flex justify-between items-center flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-foreground">Pending Confirmations</h2>
-            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+      <div className="bg-card shadow-sm rounded-xl border border-border overflow-hidden">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-muted/40 border-b border-border flex justify-between items-center flex-wrap gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <h2 className="text-lg sm:text-xl font-bold text-foreground">Pending Confirmations</h2>
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
               {pendingPayments.length} Waiting
             </span>
           </div>
           {pendingPayments.length > 0 && (
             isConfirmingAll ? (
-              <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg">
+              <div className="flex flex-wrap items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-lg">
                 <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
                   Confirm all {pendingPayments.length} payments?
                 </span>
@@ -138,7 +138,7 @@ export default function ConfirmPaymentsPage() {
               <button
                 onClick={() => setIsConfirmingAll(true)}
                 disabled={isLoading || actioningId !== null}
-                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 Confirm All Payments
               </button>
@@ -147,13 +147,13 @@ export default function ConfirmPaymentsPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-6 space-y-3 animate-pulse">
+          <div className="p-4 sm:p-6 space-y-3 animate-pulse">
             <div className="h-10 bg-muted rounded-lg w-full"></div>
             <div className="h-10 bg-muted rounded-lg w-full"></div>
             <div className="h-10 bg-muted rounded-lg w-full"></div>
           </div>
         ) : pendingPayments.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">
+          <div className="p-8 sm:p-12 text-center text-sm text-muted-foreground">
             No pending payment requests to verify.
           </div>
         ) : (
@@ -161,17 +161,17 @@ export default function ConfirmPaymentsPage() {
             <table className="min-w-full divide-y divide-border text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Member</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Due Item</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount Claimed</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Submitted</th>
-                  <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                  <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Member</th>
+                  <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Due Item</th>
+                  <th scope="col" className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount Claimed</th>
+                  <th scope="col" className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Submitted</th>
+                  <th scope="col" className="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
                 {pendingPayments.map((p) => (
                   <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         {p.user.profilePicture && !p.user.profilePicture.includes('placeholder') ? (
                           <div className="w-10 h-10 rounded-full overflow-hidden border border-border shrink-0 bg-muted">
@@ -190,14 +190,14 @@ export default function ConfirmPaymentsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <div className="font-semibold text-primary">{p.due.title}</div>
                       <span className="inline-block bg-secondary text-muted-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wider">
                         {p.due.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-foreground">
-                      {p.amount.toLocaleString()}
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right font-bold text-primary">
+                      ₦{p.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                       {new Date(p.submittedAt).toLocaleString()}
@@ -304,7 +304,7 @@ export default function ConfirmPaymentsPage() {
                       <span className="font-medium text-foreground">{p.due.title}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-foreground">
-                      {p.amount.toLocaleString()}
+                      ₦{p.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                       {p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '-'}

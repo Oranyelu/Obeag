@@ -493,28 +493,28 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto w-full min-w-0">
       
       {/* Header and Quick Generate Code */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-border">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6 pb-6 border-b border-border">
         <div>
-          <h1 className="text-3xl font-bold text-primary">User Management</h1>
-          <p className="text-muted-foreground">Manage registration codes and approve pending member signups.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">User Management</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage registration codes and approve pending member signups.</p>
         </div>
 
-        <form onSubmit={generateCode} className="flex gap-3 bg-card p-4 rounded-xl shadow border border-border w-full md:w-auto">
+        <form onSubmit={generateCode} className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 bg-card p-3 sm:p-4 rounded-xl shadow-sm border border-border w-full md:w-auto">
           <input
             type="text"
             required
             placeholder="Pre-registered Member Name"
             value={newCodeName}
             onChange={(e) => setNewCodeName(e.target.value)}
-            className="rounded-lg border border-input bg-background text-foreground text-sm px-4 py-2 focus:ring-1 focus:ring-primary w-full md:w-64 focus:outline-none"
+            className="rounded-lg border border-input bg-background text-foreground text-sm px-3.5 py-2 focus:ring-1 focus:ring-primary w-full md:w-64 focus:outline-none"
           />
           <button
             type="submit"
             disabled={isGenerating}
-            className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition whitespace-nowrap disabled:opacity-50 cursor-pointer"
+            className="bg-primary text-primary-foreground text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition whitespace-nowrap disabled:opacity-50 cursor-pointer w-full sm:w-auto text-center"
           >
             {isGenerating ? 'Generating...' : 'Generate 6-Digit Code'}
           </button>
@@ -522,39 +522,39 @@ export default function UserManagementPage() {
       </div>
 
       {/* Action Bar: Bulk Operations & Print Users */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/20 p-4 rounded-xl border border-border/60">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm font-semibold text-foreground flex items-center gap-2 mr-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-muted/20 p-3.5 sm:p-4 rounded-xl border border-border/60">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2 mr-1">
             <svg className="w-4 h-4 text-primary shrink-0" fill="currentColor" viewBox="0 0 24 24">
               <path d="M21 7.28V5c0-1.1-.9-2-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2v-2.28c.59-.35 1-.98 1-1.72V9c0-.74-.41-1.37-1-1.72zM20 9v6h-7V9h7zM5 5h14v2H5V5zm0 14V9h6v8h9v2H5z" />
             </svg>
-            Bulk Financial Operations:
+            <span>Bulk Operations:</span>
           </div>
           <button
             onClick={() => setBulkModal({ isOpen: true, type: 'DEPOSIT', selectedUserId: '', amount: '' })}
-            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
           >
-            Pay Bulk Dues (Deposit)
+            Pay Bulk Dues
           </button>
           <button
             onClick={() => setBulkModal({ isOpen: true, type: 'WITHDRAW', selectedUserId: '', amount: '' })}
-            className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
+            className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 sm:px-4 py-2 rounded-lg transition shadow-sm cursor-pointer"
           >
-            Deduct / Withdraw Bulk
+            Deduct Bulk
           </button>
         </div>
 
         {/* Print Unactivated Users Action */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <div className="relative inline-flex rounded-lg shadow-sm">
             <button
               type="button"
               onClick={() => handlePrintUnactivatedUsers('print', true)}
               disabled={isPrinting || unactivatedUsers.length === 0}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-l-lg hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-xs font-bold px-3 sm:px-4 py-2 rounded-l-lg hover:opacity-90 transition disabled:opacity-50 cursor-pointer"
               title="Print PDF with unactivated user names and registration codes"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
               <span>{isPrinting ? 'Preparing PDF...' : `Print Users (${unactivatedUsers.length})`}</span>
@@ -566,7 +566,7 @@ export default function UserManagementPage() {
               className="inline-flex items-center px-2.5 py-2 bg-primary/90 text-primary-foreground text-xs font-bold rounded-r-lg border-l border-primary-foreground/20 hover:bg-primary transition disabled:opacity-50 cursor-pointer"
               title="Download PDF directly"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             </button>
@@ -574,61 +574,61 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border space-x-4">
+      {/* Tabs - horizontally scrollable without viewport blowout */}
+      <div className="flex border-b border-border space-x-2 sm:space-x-4 overflow-x-auto scrollbar-none pb-1 -mx-2 px-2 sm:mx-0 sm:px-0">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap shrink-0 ${activeTab === 'pending' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Pending Approvals ({pendingUsers.length})
           {pendingUsers.length > 0 && (
-            <span className="ml-1.5 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="ml-1.5 bg-amber-500 text-white text-[11px] px-1.5 py-0.5 rounded-full font-bold">
               {pendingUsers.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('document-updates')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap ${activeTab === 'document-updates' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap shrink-0 ${activeTab === 'document-updates' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Document Updates ({mediaPendingUsers.length})
           {mediaPendingUsers.length > 0 && (
-            <span className="ml-1.5 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
+            <span className="ml-1.5 bg-primary text-white text-[11px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
               {mediaPendingUsers.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('codes')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === 'codes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'codes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Registration Codes
           {unactivatedUsers.length > 0 && (
-            <span className="ml-2 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="ml-1.5 bg-primary/10 text-primary text-[11px] px-1.5 py-0.5 rounded-full font-bold">
               {unactivatedUsers.length} Unactivated
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('approved')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === 'approved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'approved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Approved Members ({approvedUsers.length})
         </button>
         <button
           onClick={() => setActiveTab('flagged')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer relative ${activeTab === 'flagged' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer relative whitespace-nowrap shrink-0 ${activeTab === 'flagged' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Flagged / Revisions ({flaggedUsers.length})
           {flaggedUsers.length > 0 && (
-            <span className="ml-1.5 bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="ml-1.5 bg-amber-500 text-white text-[11px] px-1.5 py-0.5 rounded-full font-bold">
               {flaggedUsers.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab('rejected')}
-          className={`pb-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${activeTab === 'rejected' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${activeTab === 'rejected' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Rejected ({rejectedUsers.length})
         </button>
@@ -1221,16 +1221,16 @@ export default function UserManagementPage() {
                     </div>
 
                     {/* Actions Row */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/60 bg-muted/10 -mx-5 -mb-5 p-4 rounded-b-xl">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-border/60 bg-muted/10 -mx-5 -mb-5 p-3.5 sm:p-4 rounded-b-xl">
                       <button
                         type="button"
                         onClick={() => handleViewDetails(u)}
-                        className="text-xs text-muted-foreground hover:text-foreground font-semibold cursor-pointer"
+                        className="text-xs text-muted-foreground hover:text-foreground font-semibold cursor-pointer text-left"
                       >
                         View Full Profile & Ledger ↗
                       </button>
 
-                      <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                         <button
                           type="button"
                           disabled={actioningMediaId === u.id}
@@ -1240,7 +1240,7 @@ export default function UserManagementPage() {
                             userName: u.name,
                             feedback: '',
                           })}
-                          className="bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                          className="bg-red-600/10 hover:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-500/20 px-4 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer text-center"
                         >
                           Decline Update
                         </button>
@@ -1252,7 +1252,7 @@ export default function UserManagementPage() {
                               handleMediaAction(u.id, 'APPROVE');
                             }
                           }}
-                          className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer shadow-sm"
+                          className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer shadow-sm text-center"
                         >
                           {actioningMediaId === u.id ? 'Processing...' : 'Approve & Replace Storage Files'}
                         </button>
@@ -1512,12 +1512,12 @@ export default function UserManagementPage() {
 
       {/* User Details Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-4xl rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-4">
+          <div className="bg-card w-full max-w-4xl rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/40">
-              <h2 className="text-xl font-bold text-foreground">Member Details</h2>
+            <div className="flex justify-between items-center px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border bg-muted/40">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">Member Details</h2>
               <button
                 onClick={() => setSelectedUser(null)}
                 className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer"
@@ -1530,7 +1530,7 @@ export default function UserManagementPage() {
             </div>
 
             {/* Modal Content */}
-            <div className="overflow-y-auto p-6 space-y-6 flex-1">
+            <div className="overflow-y-auto p-3.5 sm:p-6 space-y-5 sm:space-y-6 flex-1">
               
               {/* Profile Header Block */}
               <div className="flex flex-col md:flex-row gap-6 items-start pb-6 border-b border-border">
@@ -2069,7 +2069,7 @@ export default function UserManagementPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 sm:gap-3">
               
               {/* If user is NOT_ACTIVATED, show Regenerate Code button */}
               {selectedUser.status === 'NOT_ACTIVATED' && (
@@ -2079,7 +2079,7 @@ export default function UserManagementPage() {
                     handleRegenerateCode(codeId, selectedUser.name);
                     setSelectedUser(null);
                   }}
-                  className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer w-full sm:w-auto text-center"
                 >
                   Regenerate Code
                 </button>
@@ -2089,7 +2089,7 @@ export default function UserManagementPage() {
               {selectedUser.status === 'PENDING_APPROVAL' && (
                 <>
                   {confirmingUserAction && confirmingUserAction.userId === selectedUser.id ? (
-                    <div className="flex gap-2 items-center mr-auto bg-orange-500/5 border border-orange-500/20 px-3 py-1.5 rounded-lg animate-pulse-subtle">
+                    <div className="flex flex-wrap gap-2 items-center mr-auto bg-orange-500/5 border border-orange-500/20 px-3 py-1.5 rounded-lg animate-pulse-subtle">
                       <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
                         Confirm {confirmingUserAction.action === 'APPROVE' ? 'Approve' : 'Reject'} Member?
                       </span>
@@ -2112,27 +2112,27 @@ export default function UserManagementPage() {
                       </button>
                     </div>
                   ) : (
-                    <>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => setConfirmingUserAction({ userId: selectedUser.id, action: 'APPROVE' })}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                        className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer text-center"
                       >
                         Approve Member
                       </button>
                       <button
                         onClick={() => setConfirmingUserAction({ userId: selectedUser.id, action: 'REJECT' })}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                        className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer text-center"
                       >
                         Reject Member
                       </button>
-                    </>
+                    </div>
                   )}
                 </>
               )}
               
               <button
                 onClick={() => setSelectedUser(null)}
-                className="bg-secondary text-foreground hover:bg-muted border border-border px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer"
+                className="bg-secondary text-foreground hover:bg-muted border border-border px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer w-full sm:w-auto text-center"
               >
                 Close
               </button>
@@ -2144,13 +2144,13 @@ export default function UserManagementPage() {
 
       {/* Bulk Transaction Modal */}
       {bulkModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-4">
           <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
             <div className={`absolute top-0 left-0 w-full h-1.5 ${bulkModal.type === 'DEPOSIT' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-red-600 to-orange-500'}`}></div>
             
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/40">
-              <h2 className="text-xl font-bold text-foreground">
+            <div className="flex justify-between items-center px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border bg-muted/40">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">
                 {bulkModal.type === 'DEPOSIT' ? 'Pay Bulk Dues' : 'Bulk Withdrawal / Deduction'}
               </h2>
               <button
@@ -2166,7 +2166,7 @@ export default function UserManagementPage() {
 
             {/* Modal Form */}
             <form onSubmit={handleBulkSubmit}>
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 <div className="space-y-1">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase">Transaction Type</label>
                   <select
@@ -2212,7 +2212,7 @@ export default function UserManagementPage() {
               </div>
 
               {/* Modal Footer */}
-              <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end gap-3">
+              <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-muted/20 border-t border-border flex justify-end gap-2.5 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setBulkModal(prev => ({ ...prev, isOpen: false }))}
@@ -2235,10 +2235,10 @@ export default function UserManagementPage() {
 
       {/* Decline Document Update Feedback Modal */}
       {declineMediaModal.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-4">
           <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/40">
-              <h2 className="text-lg font-bold text-foreground">
+            <div className="flex justify-between items-center px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border bg-muted/40">
+              <h2 className="text-base sm:text-lg font-bold text-foreground">
                 Decline Document Update
               </h2>
               <button
@@ -2252,7 +2252,7 @@ export default function UserManagementPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <p className="text-sm text-foreground">
                 You are declining the proposed document update for <strong className="font-semibold">{declineMediaModal.userName}</strong>.
               </p>
@@ -2274,7 +2274,7 @@ export default function UserManagementPage() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-muted/20 border-t border-border flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-muted/20 border-t border-border flex justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeclineMediaModal({ isOpen: false, userId: '', userName: '', feedback: '' })}
@@ -2298,15 +2298,15 @@ export default function UserManagementPage() {
       {/* Lightbox / Full-size Image Inspection Modal */}
       {previewImage && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-2.5 sm:p-4 animate-in fade-in duration-200"
           onClick={() => setPreviewImage(null)}
         >
           <div 
             className="bg-card max-w-3xl w-full max-h-[90vh] rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/40">
-              <h3 className="text-base font-bold text-foreground truncate">{previewImage.title}</h3>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-border bg-muted/40">
+              <h3 className="text-sm sm:text-base font-bold text-foreground truncate">{previewImage.title}</h3>
               <div className="flex items-center gap-2">
                 <a
                   href={previewImage.src}
@@ -2328,7 +2328,7 @@ export default function UserManagementPage() {
                 </button>
               </div>
             </div>
-            <div className="p-6 flex-1 flex items-center justify-center bg-black/30 overflow-auto min-h-[320px] max-h-[75vh]">
+            <div className="p-3.5 sm:p-6 flex-1 flex items-center justify-center bg-black/30 overflow-auto min-h-[280px] max-h-[75vh]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewImage.src}
@@ -2336,7 +2336,7 @@ export default function UserManagementPage() {
                 className="max-h-[70vh] max-w-full w-auto object-contain rounded-lg shadow-xl border border-border/50"
               />
             </div>
-            <div className="px-6 py-3 border-t border-border bg-muted/20 flex justify-between items-center text-xs text-muted-foreground">
+            <div className="px-4 sm:px-6 py-3 border-t border-border bg-muted/20 flex justify-between items-center text-xs text-muted-foreground">
               <span>Click outside or click Close</span>
               <button
                 type="button"
