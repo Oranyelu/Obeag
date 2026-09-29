@@ -86,3 +86,168 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { userId, codeId, newName } = body;
+
+    if (!newName || typeof newName !== 'string' || newName.trim() === '') {
+      return NextResponse.json({ error: 'A valid name is required.' }, { status: 400 });
+    }
+
+    const trimmedName = newName.trim();
+
+    // 1. If updating an unactivated verification code
+    if (codeId || (userId && typeof userId === 'string' && userId.startsWith('code-'))) {
+      const cleanCodeId = codeId || userId.replace('code-', '');
+      const existingCode = await prisma.verificationCode.findUnique({
+        where: { id: cleanCodeId },
+      });
+
+      if (!existingCode) {
+        return NextResponse.json({ error: 'Registration code record not found.' }, { status: 404 });
+      }
+
+      // Check if duplicate name exists among active users or other unused codes
+      let duplicateExists = false;
+      try {
+        const duplicateUser = await prisma.user.findFirst({
+          where: {
+            name: { equals: trimmedName, mode: 'insensitive' },
+            status: { in: ['APPROVED', 'PENDING_APPROVAL'] },
+          },
+        });
+
+        const duplicateCode = await prisma.verificationCode.findFirst({
+          where: {
+            id: { not: cleanCodeId },
+            name: { equals: trimmedName, mode: 'insensitive' },
+            isUsed: false,
+          },
+        });
+
+        if (duplicateUser || duplicateCode) {
+          duplicateExists = true;
+        }
+      } catch {
+        // In case mode: 'insensitive' is not supported by driver
+        const users = await prisma.user.findMany({
+          where: { status: { in: ['APPROVED', 'PENDING_APPROVAL'] } },
+          select: { name: true },
+        });
+        const codes = await prisma.verificationCode.findMany({
+          where: { isUsed: false, id: { not: cleanCodeId } },
+          select: { name: true },
+        });
+        const lowerName = trimmedName.toLowerCase();
+        if (users.some((u) => u.name.toLowerCase() === lowerName) || codes.some((c) => c.name.toLowerCase() === lowerName)) {
+          duplicateExists = true;
+        }
+      }
+
+      if (duplicateExists) {
+        return NextResponse.json(
+          { error: 'Another member with this name already exists in the system.' },
+          { status: 400 }
+        );
+      }
+
+      const updatedCode = await prisma.verificationCode.update({
+        where: { id: cleanCodeId },
+        data: { name: trimmedName },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Pre-registered member name updated successfully.',
+        code: updatedCode,
+      });
+    }
+
+    // 2. If updating a registered user
+    if (userId) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { verificationCode: true },
+      });
+
+      if (!existingUser) {
+        return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+      }
+
+      // Check if duplicate name exists with a different user or unused code
+      let duplicateExists = false;
+      try {
+        const duplicateUser = await prisma.user.findFirst({
+          where: {
+            id: { not: userId },
+            name: { equals: trimmedName, mode: 'insensitive' },
+            status: { in: ['APPROVED', 'PENDING_APPROVAL'] },
+          },
+        });
+
+        const duplicateCode = await prisma.verificationCode.findFirst({
+          where: {
+            name: { equals: trimmedName, mode: 'insensitive' },
+            isUsed: false,
+          },
+        });
+
+        if (duplicateUser || duplicateCode) {
+          duplicateExists = true;
+        }
+      } catch {
+        const users = await prisma.user.findMany({
+          where: { id: { not: userId }, status: { in: ['APPROVED', 'PENDING_APPROVAL'] } },
+          select: { name: true },
+        });
+        const codes = await prisma.verificationCode.findMany({
+          where: { isUsed: false },
+          select: { name: true },
+        });
+        const lowerName = trimmedName.toLowerCase();
+        if (users.some((u) => u.name.toLowerCase() === lowerName) || codes.some((c) => c.name.toLowerCase() === lowerName)) {
+          duplicateExists = true;
+        }
+      }
+
+      if (duplicateExists) {
+        return NextResponse.json(
+          { error: 'Another member with this name already exists in the system.' },
+          { status: 400 }
+        );
+      }
+
+      // Update only the name - ensures all payments, ledger, dues, login credentials, and documents remain untouched
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { name: trimmedName },
+      });
+
+      // If there's a linked verification code, keep its name in sync too
+      if (existingUser.verificationCode) {
+        await prisma.verificationCode.update({
+          where: { id: existingUser.verificationCode.id },
+          data: { name: trimmedName },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Member name updated successfully.',
+        user: { id: updatedUser.id, name: updatedUser.name },
+      });
+    }
+
+    return NextResponse.json({ error: 'Missing userId or codeId.' }, { status: 400 });
+  } catch (error) {
+    console.error('Error updating member name:', error);
+    return NextResponse.json({ error: 'Failed to update member name.' }, { status: 500 });
+  }
+}

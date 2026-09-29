@@ -123,6 +123,97 @@ export default function UserManagementPage() {
   // Lightbox preview modal state
   const [previewImage, setPreviewImage] = useState<{ src: string; title: string } | null>(null);
 
+  // Edit Member Name state
+  const [editNameModal, setEditNameModal] = useState<{
+    isOpen: boolean;
+    targetId: string;
+    isCode: boolean;
+    currentName: string;
+    newName: string;
+  }>({
+    isOpen: false,
+    targetId: '',
+    isCode: false,
+    currentName: '',
+    newName: '',
+  });
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameError, setEditNameError] = useState('');
+  const [editNameSuccess, setEditNameSuccess] = useState('');
+
+  const openEditNameModal = (id: string, name: string, isCode: boolean = false) => {
+    setEditNameModal({
+      isOpen: true,
+      targetId: id,
+      isCode,
+      currentName: name,
+      newName: name,
+    });
+    setEditNameError('');
+    setEditNameSuccess('');
+  };
+
+  const handleSaveName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editNameModal.newName.trim()) {
+      setEditNameError('Member name cannot be empty.');
+      return;
+    }
+
+    if (editNameModal.newName.trim() === editNameModal.currentName.trim()) {
+      setEditNameModal((prev) => ({ ...prev, isOpen: false }));
+      return;
+    }
+
+    setIsEditingName(true);
+    setEditNameError('');
+    setEditNameSuccess('');
+
+    try {
+      const payload: { userId?: string; codeId?: string; newName: string } = {
+        newName: editNameModal.newName.trim(),
+      };
+
+      if (editNameModal.isCode || editNameModal.targetId.startsWith('code-')) {
+        payload.codeId = editNameModal.targetId.replace('code-', '');
+      } else {
+        payload.userId = editNameModal.targetId;
+      }
+
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setEditNameSuccess('Name updated successfully!');
+        if (selectedUser) {
+          setSelectedUser((prev) => (prev ? { ...prev, name: editNameModal.newName.trim() } : null));
+        }
+        setTimeout(() => {
+          setEditNameModal({
+            isOpen: false,
+            targetId: '',
+            isCode: false,
+            currentName: '',
+            newName: '',
+          });
+          setEditNameSuccess('');
+        }, 500);
+        await fetchData();
+      } else {
+        setEditNameError(data.error || 'Failed to update name.');
+      }
+    } catch (err) {
+      console.error('Error updating member name:', err);
+      setEditNameError('An unexpected network error occurred.');
+    } finally {
+      setIsEditingName(false);
+    }
+  };
+
   const hasRealProfilePic = (url?: string | null): boolean => {
     if (!url) return false;
     if (url.includes('placeholder')) return false;
@@ -724,7 +815,21 @@ export default function UserManagementPage() {
                     {filteredCodes.map((c) => (
                       <tr key={c.id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-primary tracking-widest">{c.code}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{c.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium text-foreground">{c.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => openEditNameModal(c.id, c.name, true)}
+                              className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                              title="Edit pre-registered member name"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${c.isUsed ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
                             {c.isUsed ? 'Used' : 'Unused'}
@@ -873,7 +978,19 @@ export default function UserManagementPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-foreground">{u.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold text-foreground">{u.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => openEditNameModal(u.id, u.name, false)}
+                            className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                            title="Edit member name"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="text-xs text-muted-foreground">{u.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1034,6 +1151,16 @@ export default function UserManagementPage() {
                         <div>
                           <div className="font-bold text-foreground text-sm flex items-center gap-2">
                             <span>{u.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => openEditNameModal(u.id, u.name, false)}
+                              className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                              title="Edit member name"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                              </svg>
+                            </button>
                             <span className="text-[10px] bg-green-500/10 text-green-600 dark:text-green-400 font-semibold px-2 py-0.5 rounded-full">
                               Active Member
                             </span>
@@ -1325,7 +1452,19 @@ export default function UserManagementPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-foreground">{u.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold text-foreground">{u.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => openEditNameModal(u.id, u.name, false)}
+                            className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                            title="Edit member name"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="text-xs text-muted-foreground">{u.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{u.community}</td>
@@ -1401,7 +1540,19 @@ export default function UserManagementPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-foreground">{u.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold text-foreground">{u.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => openEditNameModal(u.id, u.name, false)}
+                            className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                            title="Edit member name"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="text-xs text-muted-foreground">{u.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 dark:text-orange-400">
@@ -1449,7 +1600,19 @@ export default function UserManagementPage() {
                   {rejectedUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-foreground">{u.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-semibold text-foreground">{u.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => openEditNameModal(u.id, u.name, false)}
+                            className="text-muted-foreground hover:text-primary transition p-1 rounded-md hover:bg-muted cursor-pointer"
+                            title="Edit member name"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
+                        </div>
                         <div className="text-xs text-muted-foreground">{u.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{u.phone}</td>
@@ -1563,7 +1726,20 @@ export default function UserManagementPage() {
                 <div className="space-y-2 text-center md:text-left flex-1 w-full">
                   <div className="flex flex-col md:flex-row md:items-center gap-2 justify-between">
                     <div>
-                      <h3 className="text-2xl font-bold text-foreground">{selectedUser.name}</h3>
+                      <div className="flex items-center justify-center md:justify-start gap-2.5">
+                        <h3 className="text-2xl font-bold text-foreground">{selectedUser.name}</h3>
+                        <button
+                          type="button"
+                          onClick={() => openEditNameModal(selectedUser.id, selectedUser.name, selectedUser.id.startsWith('code-'))}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-secondary text-foreground hover:bg-muted border border-border transition cursor-pointer shadow-2xs"
+                          title="Edit member name"
+                        >
+                          <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                          </svg>
+                          <span>Edit Name</span>
+                        </button>
+                      </div>
                       <p className="text-muted-foreground">{selectedUser.email}</p>
                     </div>
                     <div>
@@ -2346,6 +2522,133 @@ export default function UserManagementPage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Member Name Modal */}
+      {editNameModal.isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
+          onClick={() => !isEditingName && setEditNameModal((prev) => ({ ...prev, isOpen: false }))}
+        >
+          <div 
+            className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/40">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Edit Member Name</h3>
+                  <p className="text-[11px] text-muted-foreground">Fix typos without affecting account records</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={isEditingName}
+                onClick={() => setEditNameModal((prev) => ({ ...prev, isOpen: false }))}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition cursor-pointer disabled:opacity-50"
+                title="Close"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveName} className="p-5 space-y-4">
+              {/* Informative Assurance Callout */}
+              <div className="bg-secondary/40 border border-border/80 rounded-xl p-3 text-xs text-muted-foreground flex items-start gap-2.5">
+                <svg className="w-4 h-4 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span className="leading-relaxed">
+                  Only the member&apos;s name will be updated. All financial payments, dues ledger, uploaded documents, and login credentials remain completely intact and linked.
+                </span>
+              </div>
+
+              {editNameError && (
+                <div className="bg-destructive/10 text-destructive border border-destructive/20 text-xs p-3 rounded-xl font-medium">
+                  {editNameError}
+                </div>
+              )}
+
+              {editNameSuccess && (
+                <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-xs p-3 rounded-xl font-medium flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span>{editNameSuccess}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Current Name
+                </label>
+                <div className="px-3.5 py-2.5 rounded-xl bg-muted/60 border border-border text-xs sm:text-sm font-semibold text-foreground">
+                  {editNameModal.currentName}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="new-member-name" className="block text-xs font-bold text-foreground mb-1 uppercase tracking-wider">
+                  Corrected Full Name *
+                </label>
+                <input
+                  id="new-member-name"
+                  type="text"
+                  required
+                  value={editNameModal.newName}
+                  onChange={(e) => setEditNameModal((prev) => ({ ...prev, newName: e.target.value }))}
+                  placeholder="Enter full name"
+                  autoFocus
+                  disabled={isEditingName}
+                  className="block w-full px-3.5 py-2.5 border border-border bg-background text-foreground rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-sm shadow-xs"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border/80">
+                <button
+                  type="button"
+                  disabled={isEditingName}
+                  onClick={() => setEditNameModal((prev) => ({ ...prev, isOpen: false }))}
+                  className="px-4 py-2 border border-border text-xs font-semibold rounded-xl text-foreground hover:bg-muted transition cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEditingName || !editNameModal.newName.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition shadow-xs disabled:opacity-50 cursor-pointer"
+                >
+                  {isEditingName ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      <span>Save Name</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
