@@ -10,7 +10,7 @@ export async function GET() {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // 1. Fetch completed payments (income)
+    // 1. Fetch completed payments (income from member dues)
     const payments = await prisma.payment.findMany({
       where: { status: 'COMPLETED' },
       include: {
@@ -29,10 +29,13 @@ export async function GET() {
       }
     });
 
-    // 2. Fetch expenses
+    // 2. Fetch direct incomes/deposits (gifts, donations, grants, etc.)
+    const incomes = await prisma.income.findMany();
+
+    // 3. Fetch expenses
     const expenses = await prisma.expense.findMany();
 
-    // 3. Compile unified ledger items
+    // 4. Compile unified ledger items
     const ledgerItems: Array<{
       date: Date;
       type: 'Income' | 'Expense';
@@ -49,12 +52,26 @@ export async function GET() {
       ledgerItems.push({
         date: p.paidAt || p.submittedAt || new Date(),
         type: 'Income',
-        title: p.due.title,
-        description: p.user.name,
+        title: `${p.due.title} (${p.due.type})`,
+        description: `Member: ${p.user.name}`,
         email: p.user.email,
         amount: p.amount,
       });
       totalIncome += p.amount;
+    });
+
+    incomes.forEach(inc => {
+      const donorDetail = inc.donor ? `Donor: ${inc.donor}` : 'External Deposit/Gift';
+      const notes = inc.description ? ` (${inc.description})` : '';
+      ledgerItems.push({
+        date: inc.date,
+        type: 'Income',
+        title: `${inc.title} [${inc.category || 'Donation'}]`,
+        description: `${donorDetail}${notes}`,
+        email: '',
+        amount: inc.amount,
+      });
+      totalIncome += inc.amount;
     });
 
     expenses.forEach(e => {
@@ -72,7 +89,7 @@ export async function GET() {
     // Sort chronologically descending (newest first)
     ledgerItems.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    // 4. Generate CSV string
+    // 5. Generate CSV string
     let csvContent = 'Date,Transaction Type,Title/Category,Member/Description,Email,Amount (Naira)\n';
     
     const escapeCsv = (str: string) => {
@@ -93,7 +110,7 @@ export async function GET() {
     csvContent += `,,,Total Expenses,,-${totalExpenses}\n`;
     csvContent += `,,,Net Balance,,${totalIncome - totalExpenses}\n`;
 
-    // 5. Generate filename with date
+    // 6. Generate filename with date
     const dateStr = new Date().toISOString().split('T')[0];
     const filename = `OBEAG_Financial_Ledger_${dateStr}.csv`;
 

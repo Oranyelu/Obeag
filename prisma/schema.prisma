@@ -88,6 +88,17 @@ model Expense {
   createdAt   DateTime @default(now())
 }
 
+model Income {
+  id          String   @id @default(uuid())
+  title       String
+  amount      Float
+  category    String   @default("DONATION") // e.g. "DONATION", "GIFT", "GRANT", "SPONSORSHIP", "OTHER"
+  donor       String?  // Name of donor, patron, or external source
+  date        DateTime @default(now())
+  description String?
+  createdAt   DateTime @default(now())
+}
+
 model Meeting {
   id          String   @id @default(uuid())
   title       String
