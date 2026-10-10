@@ -4,6 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { CircularProgressBar } from '@/app/components/CircularProgressBar';
+import FundWalletModal from '@/app/components/FundWalletModal';
+import WalletHistoryModal from '@/app/components/WalletHistoryModal';
+import { launchPaystackPayment } from '@/app/lib/paystackClient';
 
 interface Due {
   id: string;
@@ -88,6 +91,15 @@ export default function DashboardPage() {
     totalAmount: 0,
   });
 
+  // Wallet & Paystack Modals
+  const [isFundWalletOpen, setIsFundWalletOpen] = useState(false);
+  const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(false);
+  const [paymentToast, setPaymentToast] = useState<string | null>(null);
+  const [settlementOption, setSettlementOption] = useState<'WALLET' | 'PAYSTACK' | 'BANK_TRANSFER'>('PAYSTACK');
+  const [isPayingWallet, setIsPayingWallet] = useState(false);
+  const [isPayingPaystack, setIsPayingPaystack] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+
   // Member Document Update state
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [newProfilePic, setNewProfilePic] = useState<string>('');
@@ -109,6 +121,15 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchDashboardData();
     fetchProfileData();
+
+    // Check for payment success return parameter
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment') === 'success') {
+        setPaymentToast('Payment completed and verified successfully! Your wallet and dues have been updated.');
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -198,6 +219,9 @@ export default function DashboardPage() {
   const handlePay = (dueId: string) => {
     const due = data?.dues.find(d => d.id === dueId);
     if (!due) return;
+    const balance = data?.stats.walletBalance || 0;
+    setSettlementOption(balance >= due.amount ? 'WALLET' : 'PAYSTACK');
+    setPayError(null);
     setPaymentModal({
       isOpen: true,
       dueIds: [dueId],
@@ -211,6 +235,9 @@ export default function DashboardPage() {
     if (outstandingDues.length === 0) return;
 
     const totalAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
+    const balance = data.stats.walletBalance || 0;
+    setSettlementOption(balance >= totalAmount ? 'WALLET' : 'PAYSTACK');
+    setPayError(null);
     setPaymentModal({
       isOpen: true,
       dueIds: outstandingDues.map(due => due.id),
@@ -218,8 +245,80 @@ export default function DashboardPage() {
     });
   };
 
+  const handlePayWithWallet = async () => {
+    setIsPayingWallet(true);
+    setPayError(null);
+    try {
+      const res = await fetch('/api/wallet/pay-dues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dueIds: paymentModal.dueIds }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setPaymentToast(result.message || 'Dues paid successfully from wallet!');
+        setPaymentModal(prev => ({ ...prev, isOpen: false }));
+        fetchDashboardData();
+      } else {
+        setPayError(result.error || 'Failed to pay dues from wallet.');
+      }
+    } catch (err) {
+      console.error('Wallet payment error:', err);
+      setPayError('An unexpected error occurred while processing wallet payment.');
+    } finally {
+      setIsPayingWallet(false);
+    }
+  };
+
+  const handlePayWithPaystack = async () => {
+    setIsPayingPaystack(true);
+    setPayError(null);
+    try {
+      const res = await fetch('/api/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          purpose: 'DUE_PAYMENT',
+          dueIds: paymentModal.dueIds,
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        if (resData.notConfigured) {
+          setPayError('Paystack is not configured yet. Please configure PAYSTACK_SECRET_KEY in server environment.');
+        } else {
+          setPayError(resData.error || 'Failed to initialize Paystack checkout.');
+        }
+        setIsPayingPaystack(false);
+        return;
+      }
+
+      await launchPaystackPayment({
+        authorizationUrl: resData.authorizationUrl,
+        accessCode: resData.accessCode,
+        reference: resData.reference,
+        email: session?.user?.email || '',
+        amountInNaira: resData.amount,
+        onSuccess: (ref) => {
+          setIsPayingPaystack(false);
+          setPaymentModal(prev => ({ ...prev, isOpen: false }));
+          window.location.href = `/payment/callback?reference=${encodeURIComponent(ref)}`;
+        },
+        onClose: () => {
+          setIsPayingPaystack(false);
+        },
+      });
+    } catch (err: unknown) {
+      console.error('Paystack dues error:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to launch Paystack checkout';
+      setPayError(msg);
+      setIsPayingPaystack(false);
+    }
+  };
+
   const submitPayment = async () => {
     setIsPaying(true);
+    setPayError(null);
     try {
       const res = await fetch('/api/payments', {
         method: 'POST',
@@ -233,11 +332,11 @@ export default function DashboardPage() {
         setPaymentModal(prev => ({ ...prev, isOpen: false }));
         fetchDashboardData();
       } else {
-        alert(result.error || 'Payment request failed.');
+        setPayError(result.error || 'Payment request failed.');
       }
     } catch (error) {
       console.error('Payment error', error);
-      alert('An error occurred while submitting payment.');
+      setPayError('An error occurred while submitting payment.');
     } finally {
       setIsPaying(false);
     }
@@ -518,6 +617,23 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Payment Success Toast */}
+      {paymentToast && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="text-lg">🎉</span>
+            <span>{paymentToast}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPaymentToast(null)}
+            className="text-xs font-bold hover:underline opacity-80 cursor-pointer ml-3"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* 2. EXECUTIVE FINANCIAL KPI DECK */}
       <div
         id="kpi-deck"
@@ -573,21 +689,36 @@ export default function DashboardPage() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               Wallet Balance
             </span>
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsWalletHistoryOpen(true)}
+                title="View Wallet History"
+                className="text-[10px] font-bold text-primary hover:underline px-1 py-0.5 rounded cursor-pointer"
+              >
+                History
+              </button>
+              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
             </div>
           </div>
-          <div className="mt-3">
+          <div className="mt-2.5">
             <span className="text-xl sm:text-2xl font-black text-foreground tracking-tight block">
               ₦{(data.stats.walletBalance || 0).toLocaleString()}
             </span>
-            <span className="text-[10px] text-muted-foreground block mt-0.5">
-              Auto-credited to future dues
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsFundWalletOpen(true)}
+              className="mt-2 w-full py-1.5 px-3 rounded-xl bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold transition shadow-xs flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <span>+ Fund Wallet</span>
+            </button>
           </div>
         </div>
+
 
         {/* KPI 4: Settlement Health Rate */}
         <div className="bg-card rounded-2xl border border-border/80 p-3 sm:p-4 shadow-xs flex items-center justify-center card-hover">
@@ -938,78 +1069,302 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* MODAL 1: PAYMENT CONFIRMATION MODAL */}
+      {/* MODAL 1: PAYMENT SETTLEMENT MODAL */}
       {paymentModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => !isPaying && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
-          ></div>
+            onClick={() => !isPaying && !isPayingWallet && !isPayingPaystack && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+          />
 
-          <div className="bg-card border border-border shadow-2xl rounded-2xl p-6 max-w-md w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[85vh] overflow-y-auto">
-            <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+          <div className="bg-card border border-border shadow-2xl rounded-3xl p-6 sm:p-7 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto space-y-5">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
 
-            <h3 className="text-xl font-black text-foreground mb-2 flex items-center gap-2">
-              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span>Settle Dues Transfer</span>
-            </h3>
-            <p className="text-muted-foreground text-xs leading-relaxed mb-4">
-              Please send the total amount to the age grade bank account, then tap <strong>I Have Sent The Money</strong> to notify the administrator.
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-black text-foreground flex items-center gap-2">
+                  <span>Settle Association Dues</span>
+                </h3>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  Select your preferred settlement method
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isPaying || isPayingWallet || isPayingPaystack}
+                onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-xl hover:bg-muted transition cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-            <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-2.5 text-xs font-mono my-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-[10px] uppercase font-sans">Bank:</span>
-                <span className="font-bold text-foreground font-sans">United Bank of Africa (UBA)</span>
+            {/* Total Dues Summary */}
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">
+                  Total Outstanding
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {paymentModal.dueIds.length} due{paymentModal.dueIds.length > 1 ? 's' : ''} selected
+                </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-[10px] uppercase font-sans">Account Name:</span>
-                <span className="font-bold text-foreground font-sans text-right">OhaBuEnyi Age grade</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground text-[10px] uppercase font-sans">Account No:</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-primary text-base">2277356114</span>
-                  <button
-                    type="button"
-                    onClick={copyAccountNumber}
-                    className="px-2 py-0.5 text-[10px] font-sans font-bold rounded bg-primary text-primary-foreground"
-                  >
-                    {copiedBank ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-between items-center border-t border-border pt-2.5">
-                <span className="text-muted-foreground text-xs uppercase font-sans font-bold">Total to Pay:</span>
-                <span className="font-black text-foreground text-lg text-primary font-sans">
+              <div className="text-right">
+                <span className="text-2xl font-black text-primary">
                   ₦{paymentModal.totalAmount.toLocaleString()}
                 </span>
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            {payError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-xs font-semibold leading-relaxed">
+                {payError}
+              </div>
+            )}
+
+            {/* Settlement Channel Switcher */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Choose Payment Channel
+              </label>
+
+              {/* Option 1: Wallet Balance */}
+              <div
+                onClick={() => setSettlementOption('WALLET')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  settlementOption === 'WALLET'
+                    ? 'border-primary bg-primary/5 shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-muted/20'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="settlement"
+                      checked={settlementOption === 'WALLET'}
+                      onChange={() => setSettlementOption('WALLET')}
+                      className="mt-0.5 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-foreground">Pay with Wallet Balance</span>
+                        <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                          Instant
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground block mt-0.5">
+                        Available Balance: <strong className="text-foreground">₦{(data?.stats.walletBalance || 0).toLocaleString()}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {settlementOption === 'WALLET' && (
+                  <div className="mt-3 pt-3 border-t border-border/60">
+                    {(data?.stats.walletBalance || 0) >= paymentModal.totalAmount ? (
+                      <button
+                        type="button"
+                        disabled={isPayingWallet}
+                        onClick={handlePayWithWallet}
+                        className="w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        {isPayingWallet ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                            <span>Processing Wallet Payment...</span>
+                          </>
+                        ) : (
+                          <span>Settle ₦{paymentModal.totalAmount.toLocaleString()} from Wallet</span>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                          Insufficient wallet balance. You need an additional ₦{(paymentModal.totalAmount - (data?.stats.walletBalance || 0)).toLocaleString()}.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentModal(prev => ({ ...prev, isOpen: false }));
+                            setIsFundWalletOpen(true);
+                          }}
+                          className="w-full py-2 px-3 rounded-xl border border-primary text-primary text-xs font-bold hover:bg-primary/5 transition cursor-pointer"
+                        >
+                          + Fund Wallet Online
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Option 2: Paystack Online */}
+              <div
+                onClick={() => setSettlementOption('PAYSTACK')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  settlementOption === 'PAYSTACK'
+                    ? 'border-primary bg-primary/5 shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-muted/20'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="settlement"
+                      checked={settlementOption === 'PAYSTACK'}
+                      onChange={() => setSettlementOption('PAYSTACK')}
+                      className="mt-0.5 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-foreground">Pay Online with Paystack</span>
+                        <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                          Automated
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground block mt-0.5">
+                        Debit Card (Mastercard/Visa/Verve), Bank Transfer, USSD
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {settlementOption === 'PAYSTACK' && (
+                  <div className="mt-3 pt-3 border-t border-border/60">
+                    <button
+                      type="button"
+                      disabled={isPayingPaystack}
+                      onClick={handlePayWithPaystack}
+                      className="w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {isPayingPaystack ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                          <span>Connecting to Paystack...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Pay ₦{paymentModal.totalAmount.toLocaleString()} Online via Paystack</span>
+                          <span>→</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-[10px] text-muted-foreground text-center mt-2">
+                      🔒 Direct automated verification • No admin waiting period
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Option 3: Manual Bank Transfer */}
+              <div
+                onClick={() => setSettlementOption('BANK_TRANSFER')}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                  settlementOption === 'BANK_TRANSFER'
+                    ? 'border-primary bg-primary/5 shadow-xs'
+                    : 'border-border/80 bg-card hover:bg-muted/20'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="settlement"
+                      checked={settlementOption === 'BANK_TRANSFER'}
+                      onChange={() => setSettlementOption('BANK_TRANSFER')}
+                      className="mt-0.5 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-foreground">Manual Bank Transfer</span>
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          Manual Review
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground block mt-0.5">
+                        Transfer to UBA account & submit for admin verification
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {settlementOption === 'BANK_TRANSFER' && (
+                  <div className="mt-3 pt-3 border-t border-border/60 space-y-3">
+                    <div className="bg-muted/40 p-3 rounded-xl border border-border space-y-2 text-xs font-mono">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Bank:</span>
+                        <span className="font-bold text-foreground font-sans">United Bank of Africa (UBA)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Account Name:</span>
+                        <span className="font-bold text-foreground font-sans text-right">OhaBuEnyi Age grade</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Account No:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-primary text-sm">2277356114</span>
+                          <button
+                            type="button"
+                            onClick={copyAccountNumber}
+                            className="px-2 py-0.5 text-[10px] font-sans font-bold rounded bg-primary text-primary-foreground cursor-pointer"
+                          >
+                            {copiedBank ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isPaying}
+                      onClick={submitPayment}
+                      className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
+                    >
+                      {isPaying ? 'Submitting...' : 'I Have Sent The Money'}
+                    </button>
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Requires administrator to manually confirm bank receipt.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Close */}
+            <div className="pt-2 border-t border-border/60">
               <button
                 type="button"
-                disabled={isPaying}
+                disabled={isPaying || isPayingWallet || isPayingPaystack}
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
-                className="flex-1 py-2.5 px-4 border border-border text-xs font-bold rounded-xl text-foreground hover:bg-muted transition cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-bold transition cursor-pointer"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isPaying}
-                onClick={submitPayment}
-                className="flex-1 py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
-              >
-                {isPaying ? 'Submitting...' : 'I Have Sent The Money'}
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* MODAL: FUND WALLET */}
+      <FundWalletModal
+        isOpen={isFundWalletOpen}
+        onClose={() => setIsFundWalletOpen(false)}
+        userEmail={session?.user?.email || ''}
+        currentWalletBalance={data?.stats.walletBalance || 0}
+        onSuccess={fetchDashboardData}
+      />
+
+      {/* MODAL: WALLET TRANSACTION HISTORY */}
+      <WalletHistoryModal
+        isOpen={isWalletHistoryOpen}
+        onClose={() => setIsWalletHistoryOpen(false)}
+        walletBalance={data?.stats.walletBalance || 0}
+      />
+
 
       {/* MODAL 2: DOCUMENT UPDATE MODAL */}
       {isDocModalOpen && (

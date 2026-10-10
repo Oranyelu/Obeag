@@ -26,6 +26,7 @@ model User {
   payments       Payment[]
   notifications  Notification[]
   verificationCode VerificationCode?
+  walletTransactions WalletTransaction[]
   flaggedReason  String?
   flaggedAt      DateTime?
   walletBalance  Float            @default(0)
@@ -63,10 +64,26 @@ model Payment {
   status      String    // "PENDING", "COMPLETED", "FAILED"
   paidAt      DateTime? // Date when admin confirmed the payment
   submittedAt DateTime  @default(now()) // Date when user submitted pay request
+  channel     String?   @default("MANUAL_TRANSFER") // "PAYSTACK", "WALLET", "MANUAL_TRANSFER"
+  reference   String?   // Paystack reference or settlement reference
   userId      String
   dueId       String
   user        User      @relation(fields: [userId], references: [id])
   due         Due       @relation(fields: [dueId], references: [id])
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  amount      Float
+  type        String   // "CREDIT" or "DEBIT"
+  purpose     String   // "WALLET_FUNDING", "DUE_PAYMENT", "REFUND", "ADMIN_ADJUSTMENT"
+  reference   String?  @unique
+  status      String   @default("SUCCESS") // "SUCCESS", "PENDING", "FAILED"
+  channel     String   @default("PAYSTACK") // "PAYSTACK", "WALLET", "MANUAL"
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 model Notification {

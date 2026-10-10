@@ -8,6 +8,8 @@ interface Payment {
   status: string;
   submittedAt: string;
   paidAt: string | null;
+  channel?: string | null;
+  reference?: string | null;
   user: {
     name: string;
     email: string;
@@ -275,6 +277,7 @@ export default function ConfirmPaymentsPage() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Member</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Due Item</th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Channel</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date Actioned</th>
                   <th scope="col" className="px-6 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                 </tr>
@@ -306,6 +309,21 @@ export default function ConfirmPaymentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-foreground">
                       ₦{p.amount.toLocaleString()}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs">
+                      {p.channel === 'PAYSTACK' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          💳 Paystack
+                        </span>
+                      ) : p.channel === 'WALLET' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          👛 Wallet
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-muted text-muted-foreground">
+                          🏦 Bank Transfer
+                        </span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
                       {p.paidAt ? new Date(p.paidAt).toLocaleDateString() : '-'}
                     </td>
@@ -318,6 +336,7 @@ export default function ConfirmPaymentsPage() {
                 ))}
               </tbody>
             </table>
+
           </div>
         )}
       </div>
