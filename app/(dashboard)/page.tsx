@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { CircularProgressBar } from '@/app/components/CircularProgressBar';
 import FundWalletModal from '@/app/components/FundWalletModal';
 import WalletHistoryModal from '@/app/components/WalletHistoryModal';
-import { launchPaystackPayment } from '@/app/lib/paystackClient';
 
 interface Due {
   id: string;
@@ -91,13 +90,13 @@ export default function DashboardPage() {
     totalAmount: 0,
   });
 
-  // Wallet & Paystack Modals
+  // Wallet & Ocubyte Modals
   const [isFundWalletOpen, setIsFundWalletOpen] = useState(false);
   const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(false);
   const [paymentToast, setPaymentToast] = useState<string | null>(null);
-  const [settlementOption, setSettlementOption] = useState<'WALLET' | 'PAYSTACK' | 'BANK_TRANSFER'>('PAYSTACK');
+  const [settlementOption, setSettlementOption] = useState<'WALLET' | 'OCUBYTE' | 'BANK_TRANSFER'>('OCUBYTE');
   const [isPayingWallet, setIsPayingWallet] = useState(false);
-  const [isPayingPaystack, setIsPayingPaystack] = useState(false);
+  const [isPayingOcubyte, setIsPayingOcubyte] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
   // Member Document Update state
@@ -220,7 +219,7 @@ export default function DashboardPage() {
     const due = data?.dues.find(d => d.id === dueId);
     if (!due) return;
     const balance = data?.stats.walletBalance || 0;
-    setSettlementOption(balance >= due.amount ? 'WALLET' : 'PAYSTACK');
+    setSettlementOption(balance >= due.amount ? 'WALLET' : 'OCUBYTE');
     setPayError(null);
     setPaymentModal({
       isOpen: true,
@@ -236,7 +235,7 @@ export default function DashboardPage() {
 
     const totalAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
     const balance = data.stats.walletBalance || 0;
-    setSettlementOption(balance >= totalAmount ? 'WALLET' : 'PAYSTACK');
+    setSettlementOption(balance >= totalAmount ? 'WALLET' : 'OCUBYTE');
     setPayError(null);
     setPaymentModal({
       isOpen: true,
@@ -270,11 +269,11 @@ export default function DashboardPage() {
     }
   };
 
-  const handlePayWithPaystack = async () => {
-    setIsPayingPaystack(true);
+  const handlePayWithOcubyte = async () => {
+    setIsPayingOcubyte(true);
     setPayError(null);
     try {
-      const res = await fetch('/api/paystack/initialize', {
+      const res = await fetch('/api/ocubyte/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -284,35 +283,23 @@ export default function DashboardPage() {
       });
       const resData = await res.json();
       if (!res.ok) {
-        if (resData.notConfigured) {
-          setPayError('Paystack is not configured yet. Please configure PAYSTACK_SECRET_KEY in server environment.');
-        } else {
-          setPayError(resData.error || 'Failed to initialize Paystack checkout.');
-        }
-        setIsPayingPaystack(false);
+        setPayError(resData.error || 'Failed to initialize Ocubyte payment.');
+        setIsPayingOcubyte(false);
         return;
       }
 
-      await launchPaystackPayment({
-        authorizationUrl: resData.authorizationUrl,
-        accessCode: resData.accessCode,
-        reference: resData.reference,
-        email: session?.user?.email || '',
-        amountInNaira: resData.amount,
-        onSuccess: (ref) => {
-          setIsPayingPaystack(false);
-          setPaymentModal(prev => ({ ...prev, isOpen: false }));
-          window.location.href = `/payment/callback?reference=${encodeURIComponent(ref)}`;
-        },
-        onClose: () => {
-          setIsPayingPaystack(false);
-        },
-      });
+      if (resData.redirectUrl) {
+        // Third-party redirection to Ocubyte payment portal
+        window.location.href = resData.redirectUrl;
+      } else {
+        setPayError('Invalid redirect URL received from payment service');
+        setIsPayingOcubyte(false);
+      }
     } catch (err: unknown) {
-      console.error('Paystack dues error:', err);
-      const msg = err instanceof Error ? err.message : 'Failed to launch Paystack checkout';
+      console.error('Ocubyte dues error:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to redirect to Ocubyte payment';
       setPayError(msg);
-      setIsPayingPaystack(false);
+      setIsPayingOcubyte(false);
     }
   };
 
@@ -1074,7 +1061,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => !isPaying && !isPayingWallet && !isPayingPaystack && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+            onClick={() => !isPaying && !isPayingWallet && !isPayingOcubyte && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
           />
 
           <div className="bg-card border border-border shadow-2xl rounded-3xl p-6 sm:p-7 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto space-y-5">
@@ -1091,7 +1078,7 @@ export default function DashboardPage() {
               </div>
               <button
                 type="button"
-                disabled={isPaying || isPayingWallet || isPayingPaystack}
+                disabled={isPaying || isPayingWallet || isPayingOcubyte}
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
                 className="text-muted-foreground hover:text-foreground p-1 rounded-xl hover:bg-muted transition cursor-pointer"
               >
@@ -1201,11 +1188,11 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Option 2: Paystack Online */}
+              {/* Option 2: Ocubyte Online */}
               <div
-                onClick={() => setSettlementOption('PAYSTACK')}
+                onClick={() => setSettlementOption('OCUBYTE')}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                  settlementOption === 'PAYSTACK'
+                  settlementOption === 'OCUBYTE'
                     ? 'border-primary bg-primary/5 shadow-xs'
                     : 'border-border/80 bg-card hover:bg-muted/20'
                 }`}
@@ -1215,46 +1202,46 @@ export default function DashboardPage() {
                     <input
                       type="radio"
                       name="settlement"
-                      checked={settlementOption === 'PAYSTACK'}
-                      onChange={() => setSettlementOption('PAYSTACK')}
+                      checked={settlementOption === 'OCUBYTE'}
+                      onChange={() => setSettlementOption('OCUBYTE')}
                       className="mt-0.5 text-primary focus:ring-primary cursor-pointer"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-foreground">Pay Online with Paystack</span>
+                        <span className="font-bold text-sm text-foreground">Pay Online via Ocubyte</span>
                         <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                          Automated
+                          Secured Gateway
                         </span>
                       </div>
                       <span className="text-xs text-muted-foreground block mt-0.5">
-                        Debit Card (Mastercard/Visa/Verve), Bank Transfer, USSD
+                        Debit Card, Bank Transfer & USSD via Ocubyte Secured Gateway
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {settlementOption === 'PAYSTACK' && (
+                {settlementOption === 'OCUBYTE' && (
                   <div className="mt-3 pt-3 border-t border-border/60">
                     <button
                       type="button"
-                      disabled={isPayingPaystack}
-                      onClick={handlePayWithPaystack}
+                      disabled={isPayingOcubyte}
+                      onClick={handlePayWithOcubyte}
                       className="w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
                     >
-                      {isPayingPaystack ? (
+                      {isPayingOcubyte ? (
                         <>
                           <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                          <span>Connecting to Paystack...</span>
+                          <span>Redirecting to Ocubyte...</span>
                         </>
                       ) : (
                         <>
-                          <span>Pay ₦{paymentModal.totalAmount.toLocaleString()} Online via Paystack</span>
+                          <span>Pay ₦{paymentModal.totalAmount.toLocaleString()} Online via Ocubyte</span>
                           <span>→</span>
                         </>
                       )}
                     </button>
                     <p className="text-[10px] text-muted-foreground text-center mt-2">
-                      🔒 Direct automated verification • No admin waiting period
+                      🔒 Third-party encrypted checkout • Redirects back immediately upon completion
                     </p>
                   </div>
                 )}
@@ -1338,7 +1325,7 @@ export default function DashboardPage() {
             <div className="pt-2 border-t border-border/60">
               <button
                 type="button"
-                disabled={isPaying || isPayingWallet || isPayingPaystack}
+                disabled={isPaying || isPayingWallet || isPayingOcubyte}
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
                 className="w-full py-2.5 px-4 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-bold transition cursor-pointer"
               >

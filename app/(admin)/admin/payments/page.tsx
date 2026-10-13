@@ -310,7 +310,11 @@ export default function ConfirmPaymentsPage() {
                       ₦{p.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs">
-                      {p.channel === 'PAYSTACK' ? (
+                      {p.channel === 'OCUBYTE' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                          🛡️ Ocubyte
+                        </span>
+                      ) : p.channel === 'PAYSTACK' ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
                           💳 Paystack
                         </span>

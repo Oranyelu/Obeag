@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { launchPaystackPayment } from '@/app/lib/paystackClient';
 
 interface FundWalletModalProps {
   isOpen: boolean;
@@ -58,7 +57,7 @@ export default function FundWalletModal({
     setErrorMessage(null);
 
     try {
-      const res = await fetch('/api/paystack/initialize', {
+      const res = await fetch('/api/ocubyte/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -70,35 +69,20 @@ export default function FundWalletModal({
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.notConfigured) {
-          setErrorMessage('Paystack is not configured yet. Please configure your PAYSTACK_SECRET_KEY in the server .env file.');
-        } else {
-          setErrorMessage(data.error || 'Failed to initialize Paystack transaction');
-        }
+        setErrorMessage(data.error || 'Failed to initialize Ocubyte payment');
         setIsLoading(false);
         return;
       }
 
-      // Launch Paystack (Popup or redirect)
-      await launchPaystackPayment({
-        authorizationUrl: data.authorizationUrl,
-        accessCode: data.accessCode,
-        reference: data.reference,
-        email: userEmail,
-        amountInNaira: currentAmountNum,
-        onSuccess: async (ref) => {
-          setIsLoading(false);
-          onClose();
-          if (onSuccess) onSuccess();
-          window.location.href = `/payment/callback?reference=${encodeURIComponent(ref)}`;
-        },
-        onClose: () => {
-          setIsLoading(false);
-        },
-      });
-
+      if (data.redirectUrl) {
+        // Third-party redirection to Ocubyte payment service
+        window.location.href = data.redirectUrl;
+      } else {
+        setErrorMessage('Invalid redirect URL received from payment service');
+        setIsLoading(false);
+      }
     } catch (err: unknown) {
-      console.error('Wallet funding error:', err);
+      console.error('Ocubyte wallet funding error:', err);
       const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
       setErrorMessage(msg);
       setIsLoading(false);
@@ -125,7 +109,7 @@ export default function FundWalletModal({
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-black text-foreground">Fund Your Wallet</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Top up online via Paystack</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Top up online via Ocubyte Secured Gateway</p>
             </div>
           </div>
           <button
@@ -217,11 +201,11 @@ export default function FundWalletModal({
           </p>
         </div>
 
-        {/* Paystack Trust Badge */}
+        {/* Ocubyte Trust Badge */}
         <div className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/40 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5 font-medium">
-            <span className="text-emerald-600 dark:text-emerald-400">🔒</span>
-            Secured by Paystack
+            <span className="text-emerald-600 dark:text-emerald-400">🛡️</span>
+            Secured by Ocubyte Gateway
           </span>
           <span className="text-[10px]">Cards, USSD & Bank Transfers</span>
         </div>
@@ -245,11 +229,11 @@ export default function FundWalletModal({
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                <span>Opening Paystack...</span>
+                <span>Redirecting to Ocubyte...</span>
               </>
             ) : (
               <>
-                <span>Pay ₦{currentAmountNum.toLocaleString()}</span>
+                <span>Pay ₦{currentAmountNum.toLocaleString()} via Ocubyte</span>
                 <span>→</span>
               </>
             )}

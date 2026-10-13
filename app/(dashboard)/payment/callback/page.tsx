@@ -8,9 +8,20 @@ function PaymentCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reference = searchParams.get('reference') || searchParams.get('trxref');
+  const signature = searchParams.get('signature');
+  const urlStatus = searchParams.get('status');
+  const urlAmount = searchParams.get('amount');
+  const urlPurpose = searchParams.get('purpose');
+
+  const isOcubyte = reference?.startsWith('OCUBYTE_') || false;
 
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
-  const [message, setMessage] = useState('Verifying your online payment with Paystack...');
+  const [gatewayName, setGatewayName] = useState<string>(isOcubyte ? 'Ocubyte' : 'Paystack');
+  const [message, setMessage] = useState(
+    isOcubyte
+      ? 'Confirming your secure payment with Ocubyte...'
+      : 'Verifying your online payment with Paystack...'
+  );
   const [details, setDetails] = useState<{ amount?: number; purpose?: string } | null>(null);
 
   useEffect(() => {
@@ -22,8 +33,35 @@ function PaymentCallbackContent() {
 
     const verifyPayment = async () => {
       try {
-        const res = await fetch(`/api/paystack/verify?reference=${encodeURIComponent(reference)}`);
-        const data = await res.json();
+        let res: Response;
+        let data: any;
+
+        if (reference.startsWith('OCUBYTE_')) {
+          setGatewayName('Ocubyte');
+          const query = new URLSearchParams({ reference });
+          if (signature) query.set('signature', signature);
+          if (urlStatus) query.set('status', urlStatus);
+          if (urlAmount) query.set('amount', urlAmount);
+          if (urlPurpose) query.set('purpose', urlPurpose);
+
+          res = await fetch(`/api/ocubyte/verify?${query.toString()}`);
+          data = await res.json();
+        } else {
+          setGatewayName('Paystack');
+          res = await fetch(`/api/paystack/verify?reference=${encodeURIComponent(reference)}`);
+          data = await res.json();
+
+          // Fallback to Ocubyte in case reference format differs
+          if (!res.ok && !data.success) {
+            const fallbackRes = await fetch(`/api/ocubyte/verify?reference=${encodeURIComponent(reference)}`);
+            const fallbackData = await fallbackRes.json();
+            if (fallbackRes.ok && fallbackData.success) {
+              res = fallbackRes;
+              data = fallbackData;
+              setGatewayName('Ocubyte');
+            }
+          }
+        }
 
         if (res.ok && data.success) {
           setStatus('success');
@@ -46,12 +84,12 @@ function PaymentCallbackContent() {
       } catch (err) {
         console.error('Callback verification error:', err);
         setStatus('error');
-        setMessage('Network error verifying payment. If you were debited, your transaction will still be processed automatically via webhook.');
+        setMessage('Network error verifying payment. If you were debited, your transaction will still be processed automatically.');
       }
     };
 
     verifyPayment();
-  }, [reference, router]);
+  }, [reference, signature, urlStatus, urlAmount, urlPurpose, router]);
 
   return (
     <div className="min-h-[75vh] flex items-center justify-center p-4">
@@ -81,7 +119,7 @@ function PaymentCallbackContent() {
 
             <div className="space-y-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
-                Payment Verified
+                Payment Verified • Secured by {gatewayName}
               </span>
               <h2 className="text-2xl font-black text-foreground mt-2">
                 {details?.purpose === 'WALLET_FUNDING' ? 'Wallet Funded!' : 'Dues Settled!'}
