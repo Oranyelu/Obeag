@@ -71,8 +71,6 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPaying, setIsPaying] = useState(false);
-  const [copiedBank, setCopiedBank] = useState(false);
 
   // Filters & Search
   const [activeTab, setActiveTab] = useState<'ALL' | 'UNPAID' | 'PENDING' | 'PAID'>('ALL');
@@ -94,7 +92,7 @@ export default function DashboardPage() {
   const [isFundWalletOpen, setIsFundWalletOpen] = useState(false);
   const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(false);
   const [paymentToast, setPaymentToast] = useState<string | null>(null);
-  const [settlementOption, setSettlementOption] = useState<'WALLET' | 'OCUBYTE' | 'BANK_TRANSFER'>('OCUBYTE');
+  const [settlementOption, setSettlementOption] = useState<'WALLET' | 'OCUBYTE'>('OCUBYTE');
   const [isPayingWallet, setIsPayingWallet] = useState(false);
   const [isPayingOcubyte, setIsPayingOcubyte] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
@@ -162,8 +160,8 @@ export default function DashboardPage() {
       highlight: 'dues-list-section',
     },
     {
-      title: 'Official Bank Details',
-      content: 'Use this card to quickly copy the official Association bank account number directly into your mobile banking app.',
+      title: 'Online Payment Gateway',
+      content: 'Instantly fund your wallet or settle dues online with automated verification via the Ocubyte payment gateway.',
       highlight: 'bank-card-section',
     },
     {
@@ -305,38 +303,6 @@ export default function DashboardPage() {
       setPayError(msg);
       setIsPayingOcubyte(false);
     }
-  };
-
-  const submitPayment = async () => {
-    setIsPaying(true);
-    setPayError(null);
-    try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dueIds: paymentModal.dueIds }),
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert('Payment request submitted! Waiting for administrator verification.');
-        setPaymentModal(prev => ({ ...prev, isOpen: false }));
-        fetchDashboardData();
-      } else {
-        setPayError(result.error || 'Payment request failed.');
-      }
-    } catch (error) {
-      console.error('Payment error', error);
-      setPayError('An error occurred while submitting payment.');
-    } finally {
-      setIsPaying(false);
-    }
-  };
-
-  const copyAccountNumber = () => {
-    navigator.clipboard.writeText('2277356114');
-    setCopiedBank(true);
-    setTimeout(() => setCopiedBank(false), 2000);
   };
 
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'pic' | 'cert') => {
@@ -558,7 +524,6 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={handlePayAll}
-                disabled={isPaying}
                 className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -878,7 +843,6 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => handlePay(due.id)}
-                        disabled={isPaying}
                         className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer"
                       >
                         Pay Due
@@ -919,66 +883,75 @@ export default function DashboardPage() {
         {/* SIDE COLUMN (4 cols): COMMUNITY & TREASURY HUB */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* CARD 1: OFFICIAL BANK TRANSFER WIDGET */}
+          {/* CARD 1: OCUBYTE INSTANT ONLINE PAYMENT HUB */}
           <div
             id="bank-card-section"
             className={`bg-card border border-border/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 relative overflow-hidden transition-all duration-300 card-hover ${getHighlightClass('bank-card-section')}`}
           >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-primary to-emerald-400"></div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
+                  🛡️
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-foreground">Age Grade Bank Details</h3>
-                  <span className="text-[10px] text-muted-foreground">Official Treasury Account</span>
+                  <h3 className="font-bold text-sm text-foreground">Instant Online Payments</h3>
+                  <span className="text-[10px] text-muted-foreground">Secured via Ocubyte</span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                UBA
+              <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Automated
               </span>
             </div>
 
-            <div className="bg-muted/30 border border-border/70 rounded-xl p-3.5 space-y-2.5 text-xs font-mono">
-              <div>
-                <span className="text-[10px] text-muted-foreground block font-sans uppercase">Bank Name</span>
-                <strong className="text-foreground font-sans">United Bank of Africa (UBA)</strong>
-              </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground block font-sans uppercase">Account Name</span>
-                <strong className="text-foreground font-sans">OhaBuEnyi Age grade</strong>
-              </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground block font-sans uppercase">Account Number</span>
-                <div className="flex items-center justify-between pt-0.5">
-                  <span className="text-lg font-black text-primary font-mono tracking-widest">
-                    2277356114
-                  </span>
-                  <button
-                    type="button"
-                    onClick={copyAccountNumber}
-                    className="text-[11px] font-sans font-bold px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer shadow-xs inline-flex items-center gap-1"
-                  >
-                    {copiedBank ? (
-                      <>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      'Copy'
-                    )}
-                  </button>
+            <div className="bg-muted/30 border border-border/70 rounded-xl p-3.5 space-y-3">
+              <p className="text-xs text-foreground font-medium leading-relaxed">
+                Association dues and wallet funding are now processed exclusively online with instant ledger reconciliation and zero waiting time.
+              </p>
+
+              <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-muted-foreground">
+                <div className="p-2 rounded-lg bg-card border border-border/50">
+                  <span className="block text-xs mb-0.5">💳</span>
+                  Debit Cards
+                </div>
+                <div className="p-2 rounded-lg bg-card border border-border/50">
+                  <span className="block text-xs mb-0.5">🏦</span>
+                  Bank Transfer
+                </div>
+                <div className="p-2 rounded-lg bg-card border border-border/50">
+                  <span className="block text-xs mb-0.5">📱</span>
+                  USSD Codes
                 </div>
               </div>
             </div>
 
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Transfer your due amounts directly to this account via USSD or mobile banking, then tap <strong>Pay Due</strong> to notify the treasury.
-            </p>
+            <div className="space-y-2 pt-1">
+              {data.stats.amountOwed > 0 ? (
+                <button
+                  type="button"
+                  onClick={handlePayAll}
+                  className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>Pay Outstanding Dues (₦{data.stats.amountOwed.toLocaleString()})</span>
+                  <span>→</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsFundWalletOpen(true)}
+                  className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>+ Fund Digital Wallet Online</span>
+                  <span>→</span>
+                </button>
+              )}
+
+              <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1">
+                <span>🔒</span>
+                <span>Encrypted 256-bit automated checkout</span>
+              </p>
+            </div>
           </div>
 
           {/* CARD 2: UPCOMING MEETINGS */}
@@ -1065,7 +1038,7 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => !isPaying && !isPayingWallet && !isPayingOcubyte && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
+            onClick={() => !isPayingWallet && !isPayingOcubyte && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
           />
 
           <div className="bg-card border border-border shadow-2xl rounded-3xl p-6 sm:p-7 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto space-y-5">
@@ -1082,7 +1055,7 @@ export default function DashboardPage() {
               </div>
               <button
                 type="button"
-                disabled={isPaying || isPayingWallet || isPayingOcubyte}
+                disabled={isPayingWallet || isPayingOcubyte}
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
                 className="text-muted-foreground hover:text-foreground p-1 rounded-xl hover:bg-muted transition cursor-pointer"
               >
@@ -1250,86 +1223,13 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-
-              {/* Option 3: Manual Bank Transfer */}
-              <div
-                onClick={() => setSettlementOption('BANK_TRANSFER')}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                  settlementOption === 'BANK_TRANSFER'
-                    ? 'border-primary bg-primary/5 shadow-xs'
-                    : 'border-border/80 bg-card hover:bg-muted/20'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="settlement"
-                      checked={settlementOption === 'BANK_TRANSFER'}
-                      onChange={() => setSettlementOption('BANK_TRANSFER')}
-                      className="mt-0.5 text-primary focus:ring-primary cursor-pointer"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-foreground">Manual Bank Transfer</span>
-                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          Manual Review
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground block mt-0.5">
-                        Transfer to UBA account & submit for admin verification
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {settlementOption === 'BANK_TRANSFER' && (
-                  <div className="mt-3 pt-3 border-t border-border/60 space-y-3">
-                    <div className="bg-muted/40 p-3 rounded-xl border border-border space-y-2 text-xs font-mono">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Bank:</span>
-                        <span className="font-bold text-foreground font-sans">United Bank of Africa (UBA)</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Account Name:</span>
-                        <span className="font-bold text-foreground font-sans text-right">OhaBuEnyi Age grade</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground text-[10px] uppercase font-sans">Account No:</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-primary text-sm">2277356114</span>
-                          <button
-                            type="button"
-                            onClick={copyAccountNumber}
-                            className="px-2 py-0.5 text-[10px] font-sans font-bold rounded bg-primary text-primary-foreground cursor-pointer"
-                          >
-                            {copiedBank ? 'Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={isPaying}
-                      onClick={submitPayment}
-                      className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
-                    >
-                      {isPaying ? 'Submitting...' : 'I Have Sent The Money'}
-                    </button>
-                    <p className="text-[10px] text-muted-foreground text-center">
-                      Requires administrator to manually confirm bank receipt.
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Modal Close */}
             <div className="pt-2 border-t border-border/60">
               <button
                 type="button"
-                disabled={isPaying || isPayingWallet || isPayingOcubyte}
+                disabled={isPayingWallet || isPayingOcubyte}
                 onClick={() => setPaymentModal(prev => ({ ...prev, isOpen: false }))}
                 className="w-full py-2.5 px-4 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-bold transition cursor-pointer"
               >
