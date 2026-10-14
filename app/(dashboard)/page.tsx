@@ -175,7 +175,7 @@ export default function DashboardPage() {
     if (!showTutorial) return '';
     const currentStep = tutorialSteps[tutorialStep];
     if (currentStep?.highlight === elementId) {
-      return 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background transition-all duration-300 relative z-30 scale-[1.01] shadow-2xl';
+      return 'ring-4 ring-primary ring-offset-4 dark:ring-offset-background transition-all duration-300 relative z-50 scale-[1.01] shadow-2xl';
     }
     return '';
   };
@@ -228,16 +228,19 @@ export default function DashboardPage() {
 
   const handlePayAll = () => {
     if (!data) return;
-    const outstandingDues = data.dues.filter(due => !due.isPaid && !due.isPending);
-    if (outstandingDues.length === 0) return;
+    const unpaidDues = data.dues.filter(due => !due.isPaid);
+    if (unpaidDues.length === 0) {
+      alert('You have no outstanding dues to settle.');
+      return;
+    }
 
-    const totalAmount = outstandingDues.reduce((sum, due) => sum + due.amount, 0);
+    const totalAmount = unpaidDues.reduce((sum, due) => sum + due.amount, 0);
     const balance = data.stats.walletBalance || 0;
     setSettlementOption(balance >= totalAmount ? 'WALLET' : 'OCUBYTE');
     setPayError(null);
     setPaymentModal({
       isOpen: true,
-      dueIds: outstandingDues.map(due => due.id),
+      dueIds: unpaidDues.map(due => due.id),
       totalAmount,
     });
   };
@@ -389,9 +392,9 @@ export default function DashboardPage() {
     );
 
     if (activeTab === 'UNPAID') {
-      list = list.filter(d => !d.isPaid && !d.isPending);
+      list = list.filter(d => !d.isPaid);
     } else if (activeTab === 'PENDING') {
-      list = list.filter(d => d.isPending);
+      list = list.filter(d => d.isPending && !d.isPaid);
     } else if (activeTab === 'PAID') {
       list = list.filter(d => d.isPaid);
     }
@@ -406,8 +409,8 @@ export default function DashboardPage() {
     return list;
   }, [data?.dues, activeTab, searchQuery]);
 
-  const unpaidCount = data?.dues.filter(d => !d.isPaid && !d.isPending).length || 0;
-  const pendingCount = data?.dues.filter(d => d.isPending).length || 0;
+  const unpaidCount = data?.dues.filter(d => !d.isPaid).length || 0;
+  const pendingCount = data?.dues.filter(d => d.isPending && !d.isPaid).length || 0;
   const paidCount = data?.dues.filter(d => d.isPaid).length || 0;
 
   const displayedDues = showAllDues ? filteredDues : filteredDues.slice(0, 6);
@@ -519,14 +522,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0 border-t md:border-t-0 border-border/60">
+          <div className="flex flex-wrap items-center gap-2.5 pt-2 md:pt-0 border-t md:border-t-0 border-border/60 w-full sm:w-auto">
             {data.stats.amountOwed > 0 && (
               <button
                 type="button"
                 onClick={handlePayAll}
-                className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2"
+                className="w-full sm:w-auto justify-center bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition cursor-pointer flex items-center gap-2 touch-manipulation active:scale-[0.98]"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
                 <span>Pay Outstanding (₦{data.stats.amountOwed.toLocaleString()})</span>
@@ -840,15 +843,24 @@ export default function DashboardPage() {
                         <span>Paid</span>
                       </span>
                     ) : due.isPending ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                        <span>Pending</span>
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          <span>Pending</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handlePay(due.id)}
+                          className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-xl shadow-xs transition cursor-pointer touch-manipulation active:scale-95"
+                        >
+                          Pay
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handlePay(due.id)}
-                        className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer"
+                        className="bg-primary hover:opacity-95 text-primary-foreground text-xs font-bold px-4 py-2 rounded-xl shadow-xs transition cursor-pointer touch-manipulation active:scale-95"
                       >
                         Pay Due
                       </button>
@@ -944,10 +956,12 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={handlePayAll}
-                  className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]"
                 >
                   <span>Pay Outstanding Dues (₦{data.stats.amountOwed.toLocaleString()})</span>
-                  <span>→</span>
+                  <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
                 </button>
               ) : (
                 <button
@@ -1050,13 +1064,13 @@ export default function DashboardPage() {
 
       {/* MODAL 1: PAYMENT SETTLEMENT MODAL */}
       {paymentModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => !isPayingWallet && !isPayingOcubyte && setPaymentModal(prev => ({ ...prev, isOpen: false }))}
           />
 
-          <div className="bg-card border border-border shadow-2xl rounded-3xl p-6 sm:p-7 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto space-y-5">
+          <div className="bg-card border border-border shadow-2xl rounded-2xl sm:rounded-3xl p-5 sm:p-7 max-w-lg w-full relative overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10 max-h-[90vh] overflow-y-auto space-y-4 sm:space-y-5">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
 
             <div className="flex justify-between items-start">
@@ -1468,7 +1482,15 @@ export default function DashboardPage() {
       {/* MODAL 4: INTERACTIVE TUTORIAL OVERLAY */}
       {showTutorial && (
         <div className="fixed inset-0 z-40 pointer-events-none">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] pointer-events-auto"></div>
+          <div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-[1px] pointer-events-auto cursor-pointer"
+            onClick={() => {
+              if (session?.user?.id) {
+                localStorage.setItem(`obeag_tutorial_completed_${session.user.id}`, 'true');
+              }
+              setShowTutorial(false);
+            }}
+          ></div>
 
           <div className="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md bg-card border-2 border-primary shadow-2xl p-5 rounded-2xl pointer-events-auto z-50 animate-in slide-in-from-bottom duration-300">
             <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
