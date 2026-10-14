@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       await tx.notification.create({
         data: {
           userId: user.id,
-          title: 'Dues Paid from Wallet 👛',
+          title: 'Dues Paid from Wallet',
           message: `Successfully paid ₦${totalAmount.toLocaleString()} for "${dueTitles}" from your wallet balance. Remaining balance: ₦${updatedUser.walletBalance.toLocaleString()}.`,
         },
       });

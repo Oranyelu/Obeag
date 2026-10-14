@@ -564,9 +564,12 @@ export default function DashboardPage() {
             {session?.user?.role === 'ADMIN' && (
               <Link
                 href="/admin"
-                className="bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-xs transition"
+                className="bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold px-3.5 py-2.5 rounded-xl shadow-xs transition inline-flex items-center gap-1.5"
               >
-                Admin Portal ↗
+                <span>Admin Portal</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
               </Link>
             )}
           </div>
@@ -577,7 +580,9 @@ export default function DashboardPage() {
       {paymentToast && (
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-semibold flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2.5">
-            <span className="text-lg">🎉</span>
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <span>{paymentToast}</span>
           </div>
           <button
@@ -893,7 +898,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm">
-                  🛡️
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-foreground">Instant Online Payments</h3>
@@ -911,16 +918,22 @@ export default function DashboardPage() {
               </p>
 
               <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-muted-foreground">
-                <div className="p-2 rounded-lg bg-card border border-border/50">
-                  <span className="block text-xs mb-0.5">💳</span>
+                <div className="p-2 rounded-lg bg-card border border-border/50 flex flex-col items-center justify-center">
+                  <svg className="w-4 h-4 mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
                   Debit Cards
                 </div>
-                <div className="p-2 rounded-lg bg-card border border-border/50">
-                  <span className="block text-xs mb-0.5">🏦</span>
+                <div className="p-2 rounded-lg bg-card border border-border/50 flex flex-col items-center justify-center">
+                  <svg className="w-4 h-4 mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M12 3l9 7H3l9-7z" />
+                  </svg>
                   Bank Transfer
                 </div>
-                <div className="p-2 rounded-lg bg-card border border-border/50">
-                  <span className="block text-xs mb-0.5">📱</span>
+                <div className="p-2 rounded-lg bg-card border border-border/50 flex flex-col items-center justify-center">
+                  <svg className="w-4 h-4 mb-1 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
                   USSD Codes
                 </div>
               </div>
@@ -947,8 +960,10 @@ export default function DashboardPage() {
                 </button>
               )}
 
-              <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1">
-                <span>🔒</span>
+              <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
                 <span>Encrypted 256-bit automated checkout</span>
               </p>
             </div>
@@ -1217,8 +1232,11 @@ export default function DashboardPage() {
                         </>
                       )}
                     </button>
-                    <p className="text-[10px] text-muted-foreground text-center mt-2">
-                      🔒 Third-party encrypted checkout • Redirects back immediately upon completion
+                    <p className="text-[10px] text-muted-foreground text-center mt-2 flex items-center justify-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span>Third-party encrypted checkout • Redirects back immediately upon completion</span>
                     </p>
                   </div>
                 )}

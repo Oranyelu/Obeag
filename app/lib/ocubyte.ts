@@ -295,7 +295,7 @@ export async function fulfillOcubytePayment({
       await tx.notification.create({
         data: {
           userId: effectiveUserId,
-          title: 'Wallet Funded via Ocubyte 🛡️',
+          title: 'Wallet Funded via Ocubyte',
           message: `Your wallet has been credited with ₦${finalAmount.toLocaleString()} through Ocubyte Secured Payment. Available immediately for dues settlement.`,
         },
       });
@@ -384,7 +384,7 @@ export async function fulfillOcubytePayment({
       await tx.notification.create({
         data: {
           userId: effectiveUserId,
-          title: 'Dues Settled via Ocubyte 🎉',
+          title: 'Dues Settled via Ocubyte',
           message: `Your payment of ₦${finalAmount.toLocaleString()} for "${dueTitles}" has been confirmed through Ocubyte Secured Payment.`,
         },
       });

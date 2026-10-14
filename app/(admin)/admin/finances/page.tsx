@@ -539,13 +539,13 @@ export default function FinancesPage() {
                         {...incomeForm.register('category')}
                         className="block w-full rounded-xl border border-input bg-background px-3.5 py-2 text-foreground shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm"
                       >
-                        <option value="Donation">🤲 Donation</option>
-                        <option value="Gift">🎁 Gift to Age Grade</option>
-                        <option value="Sponsorship">🤝 Sponsorship</option>
-                        <option value="Grant">🏛️ Grant / Endowment</option>
-                        <option value="External Deposit">💰 External Bank Deposit</option>
-                        <option value="Patron Levy">⭐ Patron Support</option>
-                        <option value="Other Income">📌 Other Income</option>
+                        <option value="Donation">Donation</option>
+                        <option value="Gift">Gift to Age Grade</option>
+                        <option value="Sponsorship">Sponsorship</option>
+                        <option value="Grant">Grant / Endowment</option>
+                        <option value="External Deposit">External Bank Deposit</option>
+                        <option value="Patron Levy">Patron Support</option>
+                        <option value="Other Income">Other Income</option>
                       </select>
                     </div>
 
@@ -733,7 +733,10 @@ export default function FinancesPage() {
                   : 'bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
-              <span>🎁 External Deposits & Gifts</span>
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V6a2 2 0 10-2 2h2zm-8 4h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2a1 1 0 011-1zm2 4h12v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5z" />
+              </svg>
+              <span>External Deposits & Gifts</span>
               <span className={`px-2 py-0.5 rounded-full text-xs ${
                 activeTableTab === 'INCOME' ? 'bg-white/20 text-white' : 'bg-muted-foreground/20 text-foreground'
               }`}>
@@ -749,7 +752,10 @@ export default function FinancesPage() {
                   : 'bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
-              <span>🧾 Expenses</span>
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+              </svg>
+              <span>Expenses</span>
               <span className={`px-2 py-0.5 rounded-full text-xs ${
                 activeTableTab === 'EXPENSE' ? 'bg-white/20 text-white' : 'bg-muted-foreground/20 text-foreground'
               }`}>

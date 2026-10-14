@@ -67,7 +67,9 @@ export default function WalletHistoryModal({
         <div className="flex justify-between items-start shrink-0">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">👛</span>
+              <svg className="w-5 h-5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
               <h3 className="text-lg sm:text-xl font-black text-foreground">Wallet Transaction History</h3>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -94,8 +96,10 @@ export default function WalletHistoryModal({
             </div>
           ) : transactions.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground space-y-2">
-              <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center mx-auto text-xl">
-                💳
+              <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
               </div>
               <p className="text-xs font-semibold text-foreground">No wallet transactions recorded yet.</p>
               <p className="text-[11px] max-w-xs mx-auto">

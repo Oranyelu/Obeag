@@ -229,7 +229,7 @@ export async function fulfillPayment(verifyData: PaystackVerifyResponse['data'])
       await tx.notification.create({
         data: {
           userId,
-          title: 'Wallet Funded Successfully 💳',
+          title: 'Wallet Funded Successfully',
           message: `Your wallet has been credited with ₦${amountInNaira.toLocaleString()} via Paystack. Your new funds are immediately available for dues settlement.`,
         },
       });
@@ -302,7 +302,7 @@ export async function fulfillPayment(verifyData: PaystackVerifyResponse['data'])
       await tx.notification.create({
         data: {
           userId,
-          title: 'Dues Settled Online 🎉',
+          title: 'Dues Settled Online',
           message: `Your online payment of ₦${amountInNaira.toLocaleString()} for "${dueTitles}" has been confirmed and verified via Paystack.`,
         },
       });

@@ -112,7 +112,9 @@ function PaymentCallbackContent() {
           <div className="py-8 space-y-5">
             <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
               <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-              <span className="absolute text-xl">💳</span>
+              <svg className="absolute w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
             </div>
             <div>
               <h2 className="text-xl font-black text-foreground">Confirming Payment</h2>
@@ -125,8 +127,10 @@ function PaymentCallbackContent() {
 
         {status === 'success' && (
           <div className="py-6 space-y-5 animate-in fade-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto text-2xl shadow-xs border border-emerald-500/20">
-              ✓
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-xs border border-emerald-500/20">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+              </svg>
             </div>
 
             <div className="space-y-1.5">
@@ -154,7 +158,10 @@ function PaymentCallbackContent() {
                 href="/?payment=success"
                 className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition shadow-xs"
               >
-                Go to Dashboard Now →
+                <span>Go to Dashboard Now</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </Link>
             </div>
           </div>
@@ -162,8 +169,10 @@ function PaymentCallbackContent() {
 
         {status === 'error' && (
           <div className="py-6 space-y-5 animate-in fade-in duration-300">
-            <div className="w-16 h-16 rounded-full bg-destructive/15 text-destructive flex items-center justify-center mx-auto text-2xl shadow-xs border border-destructive/20">
-              ✕
+            <div className="w-16 h-16 rounded-full bg-destructive/15 text-destructive flex items-center justify-center mx-auto shadow-xs border border-destructive/20">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </div>
 
             <div className="space-y-1.5">
