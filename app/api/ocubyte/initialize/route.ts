@@ -66,10 +66,15 @@ export async function POST(request: Request) {
       finalAmount = selectedDues.reduce((sum, d) => sum + d.amount, 0);
     }
 
-    // Determine absolute callback URL
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
-    const callbackUrl = `${protocol}://${host}/payment/callback`;
+    // Determine absolute callback URL (supports production domain https://ohabuenyi.vercel.app)
+    const baseUrl =
+      process.env.APP_URL?.replace(/\/+$/, '') ||
+      (() => {
+        const host = request.headers.get('host') || 'ohabuenyi.vercel.app';
+        const protocol = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
+        return `${protocol}://${host}`;
+      })();
+    const callbackUrl = `${baseUrl}/payment/callback`;
 
     const reference = generateOcubyteReference(purpose === 'WALLET_FUNDING' ? 'WALLET' : 'DUE');
 

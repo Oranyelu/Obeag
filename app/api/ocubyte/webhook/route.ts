@@ -11,16 +11,25 @@ export async function POST(request: Request) {
 
     const { secretKey } = getOcubyteConfig();
 
-    // Verify signature if header is provided
-    if (signature) {
-      const computed = crypto
-        .createHmac('sha256', secretKey)
-        .update(rawBody)
-        .digest('hex');
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing x-ocubyte-signature header' }, { status: 401 });
+    }
 
-      if (computed.toLowerCase() !== signature.toLowerCase()) {
-        console.warn('Ocubyte webhook: Signature mismatch. Logged for review.');
-      }
+    // Verify signature using timingSafeEqual
+    const computed = crypto
+      .createHmac('sha256', secretKey)
+      .update(rawBody)
+      .digest('hex');
+
+    const computedBuf = Buffer.from(computed.toLowerCase(), 'hex');
+    const signatureBuf = Buffer.from(signature.toLowerCase(), 'hex');
+
+    if (
+      computedBuf.length !== signatureBuf.length ||
+      !crypto.timingSafeEqual(computedBuf, signatureBuf)
+    ) {
+      console.warn('Ocubyte webhook: Unauthorized - Signature mismatch.');
+      return new Response('Invalid webhook signature', { status: 401 });
     }
 
     const payload = JSON.parse(rawBody);

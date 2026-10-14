@@ -57,12 +57,13 @@ export default function FundWalletModal({
     setErrorMessage(null);
 
     try {
-      const res = await fetch('/api/ocubyte/initialize', {
+      const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           purpose: 'WALLET_FUNDING',
           amount: currentAmountNum,
+          email: userEmail,
         }),
       });
 
@@ -74,9 +75,10 @@ export default function FundWalletModal({
         return;
       }
 
-      if (data.redirectUrl) {
+      const redirectTarget = data.checkoutUrl || data.redirectUrl;
+      if (redirectTarget) {
         // Third-party redirection to Ocubyte payment service
-        window.location.href = data.redirectUrl;
+        window.location.href = redirectTarget;
       } else {
         setErrorMessage('Invalid redirect URL received from payment service');
         setIsLoading(false);

@@ -23,7 +23,7 @@ export interface OcubytePaymentPayload {
  * Returns Ocubyte configuration settings from environment.
  */
 export function getOcubyteConfig() {
-  const paymentUrl = process.env.OCUBYTE_PAYMENT_URL?.trim() || 'https://www.ocubyte.com/pay';
+  const paymentUrl = process.env.OCUBYTE_PAYMENT_URL?.trim() || 'https://www.ocubyte.org/pay';
   const secretKey = process.env.OCUBYTE_SECRET_KEY?.trim() || 'ocubyte_sec_default_obeag';
   return { paymentUrl, secretKey };
 }
@@ -53,7 +53,7 @@ export function createOcubyteSignature(params: {
 }
 
 /**
- * Validates an HMAC SHA-256 signature.
+ * Validates an HMAC SHA-256 signature using constant-time comparison to prevent timing attacks.
  */
 export function verifyOcubyteSignature(
   params: {
@@ -66,43 +66,122 @@ export function verifyOcubyteSignature(
   signature: string | null
 ): boolean {
   if (!signature) return false;
-  const expected = createOcubyteSignature(params);
-  return expected.toLowerCase() === signature.toLowerCase();
+  try {
+    const expected = createOcubyteSignature(params);
+    const expectedBuf = Buffer.from(expected.toLowerCase(), 'hex');
+    const signatureBuf = Buffer.from(signature.toLowerCase(), 'hex');
+    if (expectedBuf.length !== signatureBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf);
+  } catch {
+    return false;
+  }
+}
+
+export interface InitiatePaymentParams {
+  amount: number; // in Naira (e.g. 20000)
+  email: string;
+  name?: string;
+  purpose: 'WALLET_FUNDING' | 'DUE_PAYMENT';
+  userId?: string;
+  dueIds?: string[];
+  description?: string;
 }
 
 /**
- * Builds the secure redirect URL to Ocubyte's payment service.
+ * Generates signed checkout URL for Ocubyte Gateway.
  */
-export function buildOcubyteRedirectUrl(params: OcubyteInitParams & { reference: string }): string {
-  const { paymentUrl } = getOcubyteConfig();
+export function generateOcubyteCheckoutUrl({
+  amount,
+  email,
+  name,
+  purpose,
+  userId,
+  dueIds = [],
+  description,
+}: InitiatePaymentParams): { checkoutUrl: string; reference: string } {
+  const { secretKey, paymentUrl } = getOcubyteConfig();
+  if (!secretKey) throw new Error('OCUBYTE_SECRET_KEY is not configured in environment variables.');
 
-  const signature = createOcubyteSignature({
-    reference: params.reference,
-    amount: params.amount,
-    purpose: params.purpose,
-    userId: params.userId,
-    email: params.email,
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const reference = `OCUBYTE_${purpose}_${timestamp}_${random}`;
+
+  const rawString = `${reference}|${amount}|${purpose}|${userId || ''}|${email || ''}`;
+
+  const signature = crypto
+    .createHmac('sha256', secretKey)
+    .update(rawString)
+    .digest('hex');
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'https://ohabuenyi.vercel.app';
+  const callbackUrl = `${appUrl.replace(/\/+$/, '')}/payment/callback`;
+
+  const params = new URLSearchParams({
+    reference,
+    amount: String(amount),
+    currency: 'NGN',
+    email,
+    name: name || '',
+    purpose,
+    callback_url: callbackUrl,
+    signature,
+    app: 'obeag',
+    userId: userId || '',
+    due_ids: dueIds.join(','),
+    description: description || '',
   });
 
-  const url = new URL(paymentUrl);
-  url.searchParams.set('reference', params.reference);
-  url.searchParams.set('amount', params.amount.toString());
-  url.searchParams.set('email', params.email);
-  if (params.name) url.searchParams.set('name', params.name);
-  url.searchParams.set('purpose', params.purpose);
-  url.searchParams.set('callback_url', params.callbackUrl);
-  url.searchParams.set('signature', signature);
-  url.searchParams.set('app', 'obeag');
-  url.searchParams.set('currency', 'NGN');
+  return {
+    checkoutUrl: `${paymentUrl}?${params.toString()}`,
+    reference,
+  };
+}
 
-  if (params.dueIds && params.dueIds.length > 0) {
-    url.searchParams.set('due_ids', params.dueIds.join(','));
-  }
-  if (params.dueTitles && params.dueTitles.length > 0) {
-    url.searchParams.set('description', params.dueTitles.join(', '));
-  }
+/**
+ * Direct S2S verification call to Ocubyte Gateway.
+ */
+export async function verifyWithOcubyteGateway(reference: string): Promise<{
+  verified: boolean;
+  data?: any;
+  error?: string;
+}> {
+  const secretKey = process.env.OCUBYTE_SECRET_KEY;
+  const verifyBaseUrl = process.env.OCUBYTE_VERIFY_URL || 'https://www.ocubyte.org/api/v1/gateway/verify';
 
-  return url.toString();
+  try {
+    const res = await fetch(`${verifyBaseUrl.replace(/\/+$/, '')}/${encodeURIComponent(reference)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    const data = await res.json();
+    if (data.status === 'success' && data.data && data.data.status === 'success') {
+      return { verified: true, data: data.data };
+    }
+    return { verified: false, error: data.message || 'Transaction could not be verified on gateway network' };
+  } catch (err: any) {
+    return { verified: false, error: err.message || 'Network error communicating with Ocubyte Gateway' };
+  }
+}
+
+/**
+ * Builds the secure redirect URL to Ocubyte's payment service (legacy alias).
+ */
+export function buildOcubyteRedirectUrl(params: OcubyteInitParams & { reference: string }): string {
+  const { checkoutUrl } = generateOcubyteCheckoutUrl({
+    amount: params.amount,
+    email: params.email,
+    name: params.name,
+    purpose: params.purpose,
+    userId: params.userId,
+    dueIds: params.dueIds,
+    description: params.dueTitles?.join(', '),
+  });
+  return checkoutUrl;
 }
 
 /**
@@ -157,7 +236,11 @@ export async function fulfillOcubytePayment({
 
   // 1. CASE: WALLET FUNDING
   if (effectivePurpose === 'WALLET_FUNDING') {
-    const finalAmount = amount || existingTx?.amount || 0;
+    if (existingTx && amount && Math.abs(existingTx.amount - amount) > 0.01) {
+      throw new Error(`Security violation: Amount mismatch. Expected ₦${existingTx.amount}, received ₦${amount}`);
+    }
+
+    const finalAmount = existingTx?.amount || amount || 0;
     if (finalAmount <= 0) {
       throw new Error(`Invalid amount for wallet funding transaction reference: ${reference}`);
     }
@@ -242,7 +325,10 @@ export async function fulfillOcubytePayment({
     }
 
     const calculatedTotal = dues.reduce((sum, d) => sum + d.amount, 0);
-    const finalAmount = amount || calculatedTotal;
+    if (amount && Math.abs(calculatedTotal - amount) > 0.01) {
+      throw new Error(`Security violation: Amount mismatch. Expected dues total ₦${calculatedTotal}, received ₦${amount}`);
+    }
+    const finalAmount = calculatedTotal;
 
     // Check if already fulfilled
     const allAlreadyCompleted =

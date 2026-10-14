@@ -47,3 +47,7 @@ next-env.d.ts
 member_registration_codes.txt
 seed-csv.js
 enable-rls.js
+
+# integration specs
+OCUBYTE_INTEGRATION_SPEC.md
+

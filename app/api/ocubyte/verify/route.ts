@@ -41,14 +41,17 @@ export async function GET(request: Request) {
 
     const amount = amountStr ? parseFloat(amountStr) : undefined;
 
-    // If signature was passed, verify it if possible
+    // If signature was passed, verify it strictly
     if (signature && amount && purpose) {
       const isValidSig = verifyOcubyteSignature(
         { reference, amount, purpose },
         signature
       );
       if (!isValidSig) {
-        console.warn(`Ocubyte signature mismatch for reference: ${reference}`);
+        return NextResponse.json(
+          { error: 'Security rejection: Signature verification failed. Potential transaction tampering detected.' },
+          { status: 403 }
+        );
       }
     }
 
@@ -110,7 +113,10 @@ export async function POST(request: Request) {
         signature
       );
       if (!isValidSig) {
-        console.warn(`Ocubyte POST signature mismatch for reference: ${reference}`);
+        return NextResponse.json(
+          { error: 'Security rejection: Signature verification failed. Potential transaction tampering detected.' },
+          { status: 403 }
+        );
       }
     }
 

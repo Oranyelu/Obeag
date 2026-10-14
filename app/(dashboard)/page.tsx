@@ -273,12 +273,15 @@ export default function DashboardPage() {
     setIsPayingOcubyte(true);
     setPayError(null);
     try {
-      const res = await fetch('/api/ocubyte/initialize', {
+      const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           purpose: 'DUE_PAYMENT',
+          amount: paymentModal.totalAmount,
           dueIds: paymentModal.dueIds,
+          email: session?.user?.email,
+          userId: session?.user?.id,
         }),
       });
       const resData = await res.json();
@@ -288,9 +291,10 @@ export default function DashboardPage() {
         return;
       }
 
-      if (resData.redirectUrl) {
+      const redirectTarget = resData.checkoutUrl || resData.redirectUrl;
+      if (redirectTarget) {
         // Third-party redirection to Ocubyte payment portal
-        window.location.href = resData.redirectUrl;
+        window.location.href = redirectTarget;
       } else {
         setPayError('Invalid redirect URL received from payment service');
         setIsPayingOcubyte(false);

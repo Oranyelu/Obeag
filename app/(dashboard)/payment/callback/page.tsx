@@ -38,14 +38,26 @@ function PaymentCallbackContent() {
 
         if (reference.startsWith('OCUBYTE_')) {
           setGatewayName('Ocubyte');
-          const query = new URLSearchParams({ reference });
-          if (signature) query.set('signature', signature);
-          if (urlStatus) query.set('status', urlStatus);
-          if (urlAmount) query.set('amount', urlAmount);
-          if (urlPurpose) query.set('purpose', urlPurpose);
 
-          res = await fetch(`/api/ocubyte/verify?${query.toString()}`);
+          // 1. Try S2S verification via /api/payment/verify
+          res = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reference }),
+          });
           data = await res.json();
+
+          // 2. If not ok, fall back to /api/ocubyte/verify with query params
+          if (!res.ok || !data.success) {
+            const query = new URLSearchParams({ reference });
+            if (signature) query.set('signature', signature);
+            if (urlStatus) query.set('status', urlStatus);
+            if (urlAmount) query.set('amount', urlAmount);
+            if (urlPurpose) query.set('purpose', urlPurpose);
+
+            res = await fetch(`/api/ocubyte/verify?${query.toString()}`);
+            data = await res.json();
+          }
         } else {
           setGatewayName('Paystack');
           res = await fetch(`/api/paystack/verify?reference=${encodeURIComponent(reference)}`);
